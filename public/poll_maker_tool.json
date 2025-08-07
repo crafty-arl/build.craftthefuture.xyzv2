@@ -1,0 +1,61 @@
+{
+  "id": "poll-maker",
+  "title": "Poll Maker",
+  "description": "Create a simple poll with two options.",
+  "longDescription": "This tool allows users to create a simple two-option poll. It's a fun way to explore event handling, useState, and conditional rendering in React.",
+  "icon": "BarChart",
+  "difficulty": "S-0",
+  "season": 0,
+  "category": "frontend",
+  "tags": [
+    "javascript",
+    "react",
+    "state",
+    "poll"
+  ],
+  "estimatedTime": 15,
+  "brokenCode": "import React, { useState } from 'react'\n\nfunction PollMaker() {\n  const [question, setQuestion] = useState('')\n  const [optionA, setOptionA] = useState('')\n  const [optionB, setOptionB] = useState('')\n  const [votes, setVotes] = useState({ A: 0, B: 0 })\n\n  const vote = (option) => {\n    // BUG: This doesn't update state correctly\n    votes[option] += 1\n    setVotes(votes)\n  }\n\n  return (\n    <div>\n      <input value={question} onChange={(e) => setQuestion(e.target.value)} placeholder=\"Poll question\" />\n      <input value={optionA} onChange={(e) => setOptionA(e.target.value)} placeholder=\"Option A\" />\n      <input value={optionB} onChange={(e) => setOptionB(e.target.value)} placeholder=\"Option B\" />\n      <button onClick={() => vote('A')}>{optionA}</button>\n      <button onClick={() => vote('B')}>{optionB}</button>\n      <p>{optionA}: {votes.A}</p>\n      <p>{optionB}: {votes.B}</p>\n    </div>\n  )\n}",
+  "fixedCode": "import React, { useState } from 'react'\n\nfunction PollMaker() {\n  const [question, setQuestion] = useState('')\n  const [optionA, setOptionA] = useState('')\n  const [optionB, setOptionB] = useState('')\n  const [votes, setVotes] = useState({ A: 0, B: 0 })\n\n  const vote = (option) => {\n    setVotes(prevVotes => ({\n      ...prevVotes,\n      [option]: prevVotes[option] + 1\n    }))\n  }\n\n  return (\n    <div>\n      <input value={question} onChange={(e) => setQuestion(e.target.value)} placeholder=\"Poll question\" />\n      <input value={optionA} onChange={(e) => setOptionA(e.target.value)} placeholder=\"Option A\" />\n      <input value={optionB} onChange={(e) => setOptionB(e.target.value)} placeholder=\"Option B\" />\n      <h3>{question}</h3>\n      <button onClick={() => vote('A')}>{optionA}</button>\n      <button onClick={() => vote('B')}>{optionB}</button>\n      <p>{optionA}: {votes.A}</p>\n      <p>{optionB}: {votes.B}</p>\n    </div>\n  )\n}",
+  "bugs": [
+    {
+      "id": 1,
+      "title": "State Mutation",
+      "description": "Directly mutating state causes bugs in React.",
+      "clue": "Votes object is updated without creating a new reference.",
+      "bonus": "Use a callback function to update state immutably.",
+      "difficulty": "easy",
+      "category": "logic",
+      "points": 10,
+      "hints": [
+        "Never mutate state directly.",
+        "Use a spread operator or a callback inside setVotes."
+      ],
+      "solution": "Use setVotes(prev => ({ ...prev, [option]: prev[option] + 1 }))"
+    }
+  ],
+  "requirements": [
+    "React useState hook",
+    "Basic event handling",
+    "Conditional rendering"
+  ],
+  "learningObjectives": [
+    "Learn state immutability",
+    "Practice handling user input",
+    "Understand conditional rendering in React"
+  ],
+  "createdAt": "2025-08-07T02:08:36.886211",
+  "updatedAt": "2025-08-07T02:08:36.886217",
+  "isActive": true,
+  "metadata": {
+    "author": "siki-developer",
+    "version": "1.0.0",
+    "difficulty": "beginner",
+    "techStack": [
+      "React",
+      "JavaScript"
+    ],
+    "frameworks": [
+      "React"
+    ]
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "id": "product-name-generator",
+  "title": "Product Name Generator",
+  "description": "Type in a keyword \u2192 get 5 brand name ideas.",
+  "longDescription": "This tool helps users generate five fun and catchy brand name ideas based on a single keyword. It's a playful introduction to string manipulation, randomness, and working with arrays.",
+  "icon": "FileText",
+  "difficulty": "S-0",
+  "season": 0,
+  "category": "frontend",
+  "tags": [
+    "javascript",
+    "strings",
+    "arrays",
+    "randomness"
+  ],
+  "estimatedTime": 15,
+  "brokenCode": "function ProductNameGenerator() {\n  const [keyword, setKeyword] = useState('');\n  const [names, setNames] = useState([]);\n\n  const generateNames = () => {\n    // BUG: Only pushes one name\n    const suffixes = ['ify', 'scape', 'verse', 'ster', 'ology'];\n    const newNames = [];\n    newNames.push(keyword + suffixes[Math.floor(Math.random() * suffixes.length)]);\n    setNames(newNames);\n  }\n\n  return (\n    <div>\n      <input value={keyword} onChange={(e) => setKeyword(e.target.value)} />\n      <button onClick={generateNames}>Generate</button>\n      <ul>\n        {names.map((name, index) => <li key={index}>{name}</li>)}\n      </ul>\n    </div>\n  );\n}\nexport default ProductNameGenerator;",
+  "fixedCode": "import { useState } from 'react';\n\nfunction ProductNameGenerator() {\n  const [keyword, setKeyword] = useState('');\n  const [names, setNames] = useState([]);\n\n  const generateNames = () => {\n    const suffixes = ['ify', 'scape', 'verse', 'ster', 'ology'];\n    const newNames = suffixes.map(suffix => keyword + suffix);\n    setNames(newNames);\n  };\n\n  return (\n    <div>\n      <input value={keyword} onChange={(e) => setKeyword(e.target.value)} placeholder=\"Enter a word\" />\n      <button onClick={generateNames}>Generate</button>\n      <ul>\n        {names.map((name, index) => <li key={index}>{name}</li>)}\n      </ul>\n    </div>\n  );\n}\nexport default ProductNameGenerator;",
+  "bugs": [
+    {
+      "id": 1,
+      "title": "Only One Name Generated",
+      "description": "Only one name is being generated instead of five.",
+      "clue": "Look at how newNames is being created.",
+      "bonus": "Use map to generate all variations.",
+      "difficulty": "easy",
+      "category": "logic",
+      "points": 10,
+      "hints": [
+        "Array.map can help apply a function to each element.",
+        "Check how many times the suffix loop runs."
+      ],
+      "solution": "Use map() to generate all variations: `const newNames = suffixes.map(suffix => keyword + suffix);`"
+    }
+  ],
+  "requirements": [
+    "Basic JavaScript",
+    "React useState hook",
+    "String concatenation"
+  ],
+  "learningObjectives": [
+    "Learn string manipulation",
+    "Understand array mapping",
+    "Use randomness in JS"
+  ],
+  "createdAt": "2024-01-01T00:00:00.000Z",
+  "updatedAt": "2024-01-01T00:00:00.000Z",
+  "isActive": true,
+  "metadata": {
+    "author": "siki-developer",
+    "version": "1.0.0",
+    "difficulty": "beginner",
+    "techStack": [
+      "React",
+      "JavaScript"
+    ],
+    "frameworks": [
+      "React"
+    ]
+  }
+}

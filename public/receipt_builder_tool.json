@@ -1,0 +1,76 @@
+{
+  "id": "receipt-builder",
+  "title": "Receipt Builder",
+  "description": "Fill in item details \u2192 auto-generate a clean receipt.",
+  "longDescription": "This tool helps users build a simple receipt based on input items, prices, and quantities. It introduces concepts like loops, calculations, and dynamic rendering in React.",
+  "icon": "List",
+  "difficulty": "S-0",
+  "season": 0,
+  "category": "frontend",
+  "tags": [
+    "javascript",
+    "arrays",
+    "forms",
+    "math"
+  ],
+  "estimatedTime": 20,
+  "brokenCode": "import React, { useState } from 'react'\n\nfunction ReceiptBuilder() {\n  const [items, setItems] = useState([{ name: '', price: '', qty: '' }])\n\n  const handleChange = (index, key, value) => {\n    const updated = items\n    updated[index][key] = value\n    setItems(updated)\n  }\n\n  const total = items.reduce((sum, item) => sum + item.price * item.qty, 0)\n\n  return (\n    <div>\n      {items.map((item, i) => (\n        <div key={i}>\n          <input onChange={(e) => handleChange(i, 'name', e.target.value)} />\n          <input onChange={(e) => handleChange(i, 'price', e.target.value)} />\n          <input onChange={(e) => handleChange(i, 'qty', e.target.value)} />\n        </div>\n      ))}\n      <p>Total: ${total}</p>\n    </div>\n  )\n}",
+  "fixedCode": "import React, { useState } from 'react'\n\nfunction ReceiptBuilder() {\n  const [items, setItems] = useState([{ name: '', price: '', qty: '' }])\n\n  const handleChange = (index, key, value) => {\n    const updated = [...items]\n    updated[index][key] = value\n    setItems(updated)\n  }\n\n  const total = items.reduce((sum, item) => {\n    const price = parseFloat(item.price) || 0\n    const qty = parseInt(item.qty) || 0\n    return sum + price * qty\n  }, 0)\n\n  return (\n    <div>\n      {items.map((item, i) => (\n        <div key={i}>\n          <input placeholder=\"Item\" onChange={(e) => handleChange(i, 'name', e.target.value)} />\n          <input placeholder=\"Price\" type=\"number\" onChange={(e) => handleChange(i, 'price', e.target.value)} />\n          <input placeholder=\"Qty\" type=\"number\" onChange={(e) => handleChange(i, 'qty', e.target.value)} />\n        </div>\n      ))}\n      <button onClick={() => setItems([...items, { name: '', price: '', qty: '' }])}>Add Item</button>\n      <p>Total: ${total.toFixed(2)}</p>\n    </div>\n  )\n}",
+  "bugs": [
+    {
+      "id": 1,
+      "title": "State Mutation",
+      "description": "State is being mutated directly, causing issues with re-renders.",
+      "clue": "React state updates must be immutable.",
+      "bonus": "Use the spread operator for safe updates.",
+      "difficulty": "medium",
+      "category": "logic",
+      "points": 15,
+      "hints": [
+        "Use [...items] to copy array.",
+        "Don't update state directly."
+      ],
+      "solution": "Create a new array with spread operator: `const updated = [...items]` instead of mutating the original array"
+    },
+    {
+      "id": 2,
+      "title": "Incorrect Total Calculation",
+      "description": "Prices and quantities are strings and aren't being converted properly.",
+      "clue": "Check how you're calculating the total.",
+      "bonus": "Add default values to avoid NaN.",
+      "difficulty": "easy",
+      "category": "math",
+      "points": 10,
+      "hints": [
+        "Use parseFloat for price and parseInt for qty.",
+        "Default to 0 if value is not a number."
+      ],
+      "solution": "Convert strings to numbers: `const price = parseFloat(item.price) || 0; const qty = parseInt(item.qty) || 0`"
+    }
+  ],
+  "requirements": [
+    "React useState hook",
+    "JavaScript forms",
+    "Array and reduce method"
+  ],
+  "learningObjectives": [
+    "Learn how to manage dynamic form state",
+    "Understand reduce for calculating totals",
+    "Practice immutability in state updates"
+  ],
+  "createdAt": "2024-01-01T00:00:00.000Z",
+  "updatedAt": "2024-01-01T00:00:00.000Z",
+  "isActive": true,
+  "metadata": {
+    "author": "siki-developer",
+    "version": "1.0.0",
+    "difficulty": "beginner",
+    "techStack": [
+      "React",
+      "JavaScript"
+    ],
+    "frameworks": [
+      "React"
+    ]
+  }
+}

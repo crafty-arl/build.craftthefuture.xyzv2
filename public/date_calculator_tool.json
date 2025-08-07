@@ -1,0 +1,75 @@
+{
+  "id": "date-calculator",
+  "title": "Date Calculator",
+  "description": "A simple date calculator with common bugs",
+  "longDescription": "This tool helps users calculate the difference between two dates. It's designed to teach debugging skills by introducing common date manipulation bugs.",
+  "icon": "Calendar",
+  "difficulty": "S-0",
+  "season": 0,
+  "category": "frontend",
+  "tags": [
+    "javascript",
+    "dates",
+    "validation"
+  ],
+  "estimatedTime": 15,
+  "brokenCode": "function DateCalculator() {\n  const [startDate, setStartDate] = useState('')\n  const [endDate, setEndDate] = useState('')\n  \n  const calculateDays = () => {\n    // BUG: This will return undefined\n    const start = new Date(startDate)\n    const end = new Date(endDate)\n    const diffTime = end - start\n    return diffTime / (1000 * 60 * 60 * 24)\n  }\n\n  return (\n    <div style={{ padding: '20px', fontFamily: 'system-ui' }}>\n      <h2>Date Calculator</h2>\n      <div style={{ marginBottom: '10px' }}>\n        <label>Start Date: </label>\n        <input \n          type=\"date\" \n          value={startDate}\n          onChange={(e) => setStartDate(e.target.value)}\n        />\n      </div>\n      <div style={{ marginBottom: '10px' }}>\n        <label>End Date: </label>\n        <input \n          type=\"date\" \n          value={endDate}\n          onChange={(e) => setEndDate(e.target.value)}\n        />\n      </div>\n      <p>Days between: <strong>{calculateDays()}</strong></p>\n    </div>\n  )\n}",
+  "fixedCode": "import { useState } from 'react'\n\nfunction DateCalculator() {\n  const [startDate, setStartDate] = useState('')\n  const [endDate, setEndDate] = useState('')\n  \n  const calculateDays = () => {\n    if (!startDate || !endDate) return 'Select both dates'\n    const start = new Date(startDate)\n    const end = new Date(endDate)\n    const diffTime = Math.abs(end - start)\n    return Math.ceil(diffTime / (1000 * 60 * 60 * 24))\n  }\n\n  return (\n    <div style={{ padding: '20px', fontFamily: 'system-ui' }}>\n      <h2>Date Calculator</h2>\n      <div style={{ marginBottom: '10px' }}>\n        <label>Start Date: </label>\n        <input \n          type=\"date\" \n          value={startDate}\n          onChange={(e) => setStartDate(e.target.value)}\n        />\n      </div>\n      <div style={{ marginBottom: '10px' }}>\n        <label>End Date: </label>\n        <input \n          type=\"date\" \n          value={endDate}\n          onChange={(e) => setEndDate(e.target.value)}\n        />\n      </div>\n      <p>Days between: <strong>{calculateDays()}</strong></p>\n    </div>\n  )\n}",
+  "bugs": [
+    {
+      "id": 1,
+      "title": "Output Shows Nothing",
+      "description": "When no dates are selected, the calculator shows undefined",
+      "clue": "Check how dates get converted to numbers",
+      "bonus": "Add validation for empty inputs",
+      "difficulty": "easy",
+      "category": "logic",
+      "points": 10,
+      "hints": [
+        "What happens when you create a Date with an empty string?",
+        "Check the calculateDays function when inputs are empty"
+      ],
+      "solution": "Add a check for empty dates: `if (!startDate || !endDate) return 'Select both dates'`"
+    },
+    {
+      "id": 2,
+      "title": "App Crashes",
+      "description": "Empty dates break everything",
+      "clue": "Guard against missing values",
+      "bonus": "Show helpful feedback to users",
+      "difficulty": "easy",
+      "category": "syntax",
+      "points": 15,
+      "hints": [
+        "Add validation before calculating",
+        "Check if dates are valid before processing"
+      ],
+      "solution": "Use Math.abs() to handle negative differences and Math.ceil() for proper rounding: `const diffTime = Math.abs(end - start); return Math.ceil(diffTime / (1000 * 60 * 60 * 24))`"
+    }
+  ],
+  "requirements": [
+    "Basic JavaScript knowledge",
+    "Understanding of Date objects",
+    "React useState hook"
+  ],
+  "learningObjectives": [
+    "Learn to validate user inputs",
+    "Understand date manipulation in JavaScript",
+    "Practice debugging common errors"
+  ],
+  "createdAt": "2024-01-01T00:00:00",
+  "updatedAt": "2024-01-01T00:00:00",
+  "isActive": true,
+  "metadata": {
+    "author": "siki-developer",
+    "version": "1.0.0",
+    "difficulty": "beginner",
+    "techStack": [
+      "React",
+      "JavaScript"
+    ],
+    "frameworks": [
+      "React"
+    ]
+  }
+}

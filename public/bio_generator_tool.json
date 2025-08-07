@@ -1,0 +1,77 @@
+{
+  "id": "bio-generator",
+  "title": "Bio Generator",
+  "description": "Generate random fun bios with names, jobs, and hobbies.",
+  "longDescription": "This tool generates random fun bios by combining different names, jobs, and hobbies. It introduces concepts like arrays, random selection, and dynamic UI state updates in React.",
+  "icon": "User",
+  "difficulty": "S-0",
+  "season": 0,
+  "category": "frontend",
+  "tags": [
+    "javascript",
+    "react",
+    "arrays",
+    "random"
+  ],
+  "estimatedTime": 15,
+  "brokenCode": "import React, { useState } from 'react'\n\nfunction BioGenerator() {\n  const [bio, setBio] = useState('')\n  \n  const names = ['Alex', 'Sam', 'Jordan', 'Taylor', 'Casey']\n  const jobs = ['Software Engineer', 'Designer', 'Teacher', 'Chef', 'Artist']\n  const hobbies = ['reading', 'hiking', 'cooking', 'gaming', 'painting']\n  \n  const generateBio = () => {\n    // BUG: This doesn't generate random bios properly\n    const name = names[0]\n    const job = jobs[0]\n    const hobby = hobbies[0]\n    \n    const newBio = `${name} is a ${job} who loves ${hobby}.`\n    setBio(newBio)\n  }\n\n  return (\n    <div>\n      <button onClick={generateBio}>Generate Random Bio</button>\n      <div>{bio}</div>\n    </div>\n  )\n}",
+  "fixedCode": "import React, { useState } from 'react'\n\nfunction BioGenerator() {\n  const [bio, setBio] = useState('')\n  \n  const names = ['Alex', 'Sam', 'Jordan', 'Taylor', 'Casey', 'Morgan', 'Riley', 'Quinn']\n  const jobs = ['Software Engineer', 'Designer', 'Teacher', 'Chef', 'Artist', 'Doctor', 'Writer', 'Musician']\n  const hobbies = ['reading', 'hiking', 'cooking', 'gaming', 'painting', 'dancing', 'photography', 'yoga']\n  \n  const generateBio = () => {\n    const randomName = names[Math.floor(Math.random() * names.length)]\n    const randomJob = jobs[Math.floor(Math.random() * jobs.length)]\n    const randomHobby = hobbies[Math.floor(Math.random() * hobbies.length)]\n    \n    const newBio = `${randomName} is a ${randomJob} who loves ${randomHobby}.`\n    setBio(newBio)\n  }\n\n  return (\n    <div>\n      <button onClick={generateBio}>Generate Random Bio</button>\n      <div>{bio}</div>\n    </div>\n  )\n}",
+  "bugs": [
+    {
+      "id": 1,
+      "title": "Not Actually Random",
+      "description": "The bio generator always uses the first item from each array instead of random selection.",
+      "clue": "Check how the name, job, and hobby are selected from their arrays.",
+      "bonus": "Add more variety to the names, jobs, and hobbies arrays.",
+      "difficulty": "easy",
+      "category": "logic",
+      "points": 10,
+      "hints": [
+        "Use Math.random() to select random items from arrays.",
+        "Use Math.floor() to convert the random number to an array index."
+      ],
+      "solution": "Use Math.floor(Math.random() * array.length) to get random indices: `const randomName = names[Math.floor(Math.random() * names.length)]`"
+    },
+    {
+      "id": 2,
+      "title": "Limited Variety",
+      "description": "The arrays have very few options, making the bios repetitive.",
+      "clue": "How many different names, jobs, and hobbies are available?",
+      "bonus": "Add more diverse options to make bios more interesting.",
+      "difficulty": "easy",
+      "category": "data",
+      "points": 8,
+      "hints": [
+        "Add more names to the names array.",
+        "Add more jobs to the jobs array.",
+        "Add more hobbies to the hobbies array."
+      ],
+      "solution": "Expand the arrays with more options: `const names = ['Alex', 'Sam', 'Jordan', 'Taylor', 'Casey', 'Morgan', 'Riley', 'Quinn']`"
+    }
+  ],
+  "requirements": [
+    "React useState hook",
+    "Array manipulation",
+    "Random number generation"
+  ],
+  "learningObjectives": [
+    "Learn to generate random values in JavaScript",
+    "Practice working with arrays and array indices",
+    "Understand dynamic state updates in React"
+  ],
+  "createdAt": "2024-01-01T00:00:00.000Z",
+  "updatedAt": "2024-01-01T00:00:00.000Z",
+  "isActive": true,
+  "metadata": {
+    "author": "siki-developer",
+    "version": "1.0.0",
+    "difficulty": "beginner",
+    "techStack": [
+      "React",
+      "JavaScript"
+    ],
+    "frameworks": [
+      "React"
+    ]
+  }
+}
