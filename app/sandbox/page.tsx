@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Play, RotateCcw, Terminal, Download, Settings, Save, FileText, Code2, Trash2 } from 'lucide-react'
 import { ExportDialog } from '@/components/export-dialog'
+import { ReactCodeGenerator } from '@/lib/utils/reactCodeGenerator'
 
 interface SandboxTemplate {
   id: string
@@ -583,70 +584,11 @@ export default function SandboxPage() {
             files={{
               "/App.js": {
                 code: (() => {
-                  const cleanedCode = currentCode.replace(/export default.*;?\s*$/, '')
-                  // If code is empty, provide a default component
-                  if (!cleanedCode.trim()) {
-                    return `import React from 'react';
-
-function ${componentName}() {
-  return (
-    <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
-      <h1>Welcome to the Sandbox!</h1>
-      <p>Start coding your React component here.</p>
-      <p>Your component will appear below.</p>
-    </div>
-  );
-}
-
-function App() {
-  return <${componentName} />
-}
-
-export default App;`
+                  // Use ReactCodeGenerator for proper code generation
+                  if (!currentCode.trim()) {
+                    return ReactCodeGenerator.generateReactCode('', componentName)
                   }
-                  
-                  // Check if the code contains a component definition
-                  const hasComponent = cleanedCode.includes('function') || cleanedCode.includes('const') || cleanedCode.includes('class')
-                  
-                  if (!hasComponent) {
-                    // If no component found, wrap the code in a component
-                    return `import React from 'react';
-
-function ${componentName}() {
-  return (
-    <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
-      <h1>Your Component</h1>
-      <div>
-        ${cleanedCode || '// Your code will appear here'}
-      </div>
-    </div>
-  );
-}
-
-function App() {
-  return <${componentName} />
-}
-
-export default App;`
-                  }
-                  
-                  // Extract the actual component name from the code
-                  let actualComponentName = componentName;
-                  
-                  // Try to find function component
-                  const functionMatch = cleanedCode.match(/function\s+(\w+)\s*\(/);
-                  if (functionMatch) {
-                    actualComponentName = functionMatch[1];
-                  } else {
-                    // Try to find const component
-                    const constMatch = cleanedCode.match(/const\s+(\w+)\s*=/);
-                    if (constMatch) {
-                      actualComponentName = constMatch[1];
-                    }
-                  }
-                  
-                  const finalCode = `${cleanedCode}\n\nfunction App() {\n  return <${actualComponentName} />\n}\n\nexport default App;`
-                  return finalCode
+                  return ReactCodeGenerator.generateReactCode(currentCode, componentName)
                 })(),
                 active: true
               }

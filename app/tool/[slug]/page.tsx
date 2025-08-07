@@ -10,6 +10,7 @@ import { Play, RotateCcw, Terminal, Github, LogOut, Bug, BookOpen, CheckCircle, 
 import ProfilePage from '../../../components/profile-page'
 import { loadToolsFromJson, fallbackTools, type HomepageTool } from '@/lib/utils/toolLoader'
 import { ExportDialog } from '@/components/export-dialog'
+import { ReactCodeGenerator } from '@/lib/utils/reactCodeGenerator'
 
 type Tool = HomepageTool
 
@@ -308,94 +309,44 @@ export default function ToolPage() {
         </div>
       </div>
 
-      {/* Split View */}
-      <div className="flex flex-col lg:flex-row h-[calc(100vh-140px)]">
-        {/* Left Panel - Code Editor */}
-        <div className="w-full lg:w-1/2 border-b lg:border-b-0 lg:border-r border-[#1E1E1E] h-1/2 lg:h-full">
-          <Sandpack
-            key={`${currentTool.id}-${sandpackKey}`}
-            template="react"
-                            files={{
-                  "/App.js": {
-                    code: (() => {
-                      const cleanedCode = currentCode.replace(/export default.*;?\s*$/, '')
-                      const componentName = getComponentName(currentTool.id)
-                      const finalCode = `${cleanedCode}\n\nfunction App() {\n  return <${componentName} />\n}\n\nexport default App;`
-                      console.log('Generated Sandpack code:', finalCode.substring(0, 200) + '...')
-                      return finalCode
-                    })(),
-                    active: true
-                  }
-                }}
-            theme={{
-              colors: {
-                surface1: "#1E1E1E",
-                surface2: "#1E1E1E",
-                surface3: "#1E1E1E"
-              }
-            }}
-                          options={{
-                showNavigator: false,
-                showTabs: false,
-                showLineNumbers: true,
-                showInlineErrors: true,
-                wrapContent: true,
-                editorHeight: "calc(50vh - 70px)",
-                layout: "preview",
-                editorWidthPercentage: 100
-              }}
-            customSetup={{
-              dependencies: {
-                "react": "^18.0.0",
-                "react-dom": "^18.0.0"
-              }
-            }}
-          />
-        </div>
-
-        {/* Right Panel - Live Preview */}
-        <div className="w-full lg:w-1/2 bg-[#1E1E1E] h-1/2 lg:h-full">
-          <div className="h-full">
-            <Sandpack
-              key={`preview-${currentTool.id}-${sandpackKey}`}
-              template="react"
-              files={{
-                "/App.js": {
-                  code: (() => {
-                    const cleanedCode = currentCode.replace(/export default.*;?\s*$/, '')
-                    const componentName = getComponentName(currentTool.id)
-                    const finalCode = `${cleanedCode}\n\nfunction App() {\n  return <${componentName} />\n}\n\nexport default App;`
-                    return finalCode
-                  })(),
-                  active: true
-                }
-              }}
-              theme={{
-                colors: {
-                  surface1: "#1E1E1E",
-                  surface2: "#1E1E1E",
-                  surface3: "#1E1E1E"
-                }
-              }}
-              options={{
-                showNavigator: false,
-                showTabs: false,
-                showLineNumbers: false,
-                showInlineErrors: false,
-                wrapContent: true,
-                editorHeight: "calc(50vh - 70px)",
-                layout: "preview",
-                editorWidthPercentage: 0
-              }}
-              customSetup={{
-                dependencies: {
-                  "react": "^18.0.0",
-                  "react-dom": "^18.0.0"
-                }
-              }}
-            />
-          </div>
-        </div>
+      {/* Unified Sandpack View */}
+      <div className="h-[calc(100vh-140px)]">
+        <Sandpack
+          key={`${currentTool.id}-${sandpackKey}`}
+          template="react"
+          files={{
+            "/App.js": {
+              code: (() => {
+                // Use ReactCodeGenerator for proper code generation
+                return ReactCodeGenerator.generateToolCode(currentTool.id, currentCode)
+              })(),
+              active: true
+            }
+          }}
+          theme={{
+            colors: {
+              surface1: "#1E1E1E",
+              surface2: "#1E1E1E",
+              surface3: "#1E1E1E"
+            }
+          }}
+          options={{
+            showNavigator: false,
+            showTabs: false,
+            showLineNumbers: true,
+            showInlineErrors: true,
+            wrapContent: true,
+            editorHeight: "calc(100vh - 140px)",
+            layout: "preview",
+            editorWidthPercentage: 50
+          }}
+          customSetup={{
+            dependencies: {
+              "react": "^18.0.0",
+              "react-dom": "^18.0.0"
+            }
+          }}
+        />
       </div>
 
       {/* Bottom Dock */}
