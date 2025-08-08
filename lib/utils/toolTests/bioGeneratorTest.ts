@@ -50,7 +50,7 @@ export class BioGeneratorTest extends BaseToolTest {
     const hobbies = ['reading', 'hiking', 'cooking', 'gaming', 'painting']
     
     try {
-      const result = await this.executeCode(testCode, { names, jobs, hobbies })
+      const result = await this.executeCode(testCode + "\nreturn generateBio(names, jobs, hobbies)", { names, jobs, hobbies })
       
       return {
         success: typeof result === 'string' && result.includes(' is a ') && result.includes(' who loves '),
@@ -79,8 +79,8 @@ export class BioGeneratorTest extends BaseToolTest {
     `
     
     try {
-      const result1 = await this.executeCode(testCode, { names: null, jobs: [], hobbies: [] })
-      const result2 = await this.executeCode(testCode, { names: [], jobs: ['Job'], hobbies: ['Hobby'] })
+      const result1 = await this.executeCode(testCode + "\nreturn generateBio(names, jobs, hobbies)", { names: null, jobs: [], hobbies: [] })
+      const result2 = await this.executeCode(testCode + "\nreturn generateBio(names, jobs, hobbies)", { names: [], jobs: ['Job'], hobbies: ['Hobby'] })
       
       return {
         success: result1 === 'Invalid input' && result2 === 'Empty arrays',
@@ -110,7 +110,7 @@ export class BioGeneratorTest extends BaseToolTest {
       const jobs = ['Doctor', 'Writer', 'Musician']
       const hobbies = ['photography', 'yoga', 'travel']
       
-      const result = await this.executeCode(testCode, { names, jobs, hobbies })
+      const result = await this.executeCode(testCode + "\nreturn generateBio(names, jobs, hobbies)", { names, jobs, hobbies })
       
       // Check if the result contains expected patterns
       const hasName = names.some(name => result.includes(name))

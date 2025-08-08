@@ -43,6 +43,7 @@ export class ReceiptBuilderTest extends BaseToolTest {
           return total + (price * quantity);
         }, 0);
       }
+      return calculateTotal(items)
     `
     
     const items = [
@@ -79,8 +80,8 @@ export class ReceiptBuilderTest extends BaseToolTest {
     `
     
     try {
-      const result1 = await this.executeCode(testCode, { items: null })
-      const result2 = await this.executeCode(testCode, { items: [] })
+      const result1 = await this.executeCode(testCode + "\nreturn calculateTotal(items)", { items: null })
+      const result2 = await this.executeCode(testCode + "\nreturn calculateTotal(items)", { items: [] })
       
       return {
         success: result1 === 0 && result2 === 0,
@@ -98,10 +99,13 @@ export class ReceiptBuilderTest extends BaseToolTest {
     const testCode = `
       function handleSubmit(event) {
         event.preventDefault();
-        const formData = new FormData(event.target);
-        const items = [];
-        // Process form data
-        return items;
+        // Avoid using FormData in test environment; derive from event.target.elements
+        const els = (event && event.target && event.target.elements) || {};
+        return [{
+          name: els.itemName ? els.itemName.value : '',
+          price: els.itemPrice ? els.itemPrice.value : '0',
+          quantity: els.itemQuantity ? els.itemQuantity.value : '0'
+        }];
       }
     `
     
@@ -118,7 +122,7 @@ export class ReceiptBuilderTest extends BaseToolTest {
         }
       }
       
-      const result = await this.executeCode(testCode, { event: mockEvent })
+      const result = await this.executeCode(testCode + "\nreturn handleSubmit(event)", { event: mockEvent })
       
       return {
         success: Array.isArray(result),

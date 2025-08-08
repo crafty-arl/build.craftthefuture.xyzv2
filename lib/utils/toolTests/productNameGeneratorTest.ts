@@ -40,6 +40,7 @@ export class ProductNameGeneratorTest extends BaseToolTest {
         const newNames = suffixes.map(suffix => baseName + suffix);
         return newNames;
       }
+      return generateProductNames(baseName, suffixes)
     `
     
     const baseName = 'Tech'
@@ -69,8 +70,8 @@ export class ProductNameGeneratorTest extends BaseToolTest {
     `
     
     try {
-      const result1 = await this.executeCode(testCode, { baseName: null, suffixes: ['Pro'] })
-      const result2 = await this.executeCode(testCode, { baseName: 'Tech', suffixes: null })
+      const result1 = await this.executeCode(testCode + "\nreturn generateProductNames(baseName, suffixes)", { baseName: null, suffixes: ['Pro'] })
+      const result2 = await this.executeCode(testCode + "\nreturn generateProductNames(baseName, suffixes)", { baseName: 'Tech', suffixes: null })
       
       return {
         success: Array.isArray(result1) && Array.isArray(result2),
@@ -93,7 +94,7 @@ export class ProductNameGeneratorTest extends BaseToolTest {
     `
     
     try {
-      const result = await this.executeCode(testCode, { 
+      const result = await this.executeCode(testCode + "\nreturn generateProductNames(baseName, suffixes)", { 
         baseName: 'Smart', 
         suffixes: ['Phone', 'Watch', 'Tablet'] 
       })

@@ -42,26 +42,28 @@ export class PollMakerTest extends BaseToolTest {
           [optionId]: (prev[optionId] || 0) + 1
         }));
       }
+      return handleVote(optionId, votes, setVotes)
     `
     
     const initialVotes = { 'option1': 5, 'option2': 3 }
+    // Capture latest state like a React setState effect
+    const latest: { state: any } = { state: { ...initialVotes } }
     const setVotes = (updater: any) => {
-      if (typeof updater === 'function') {
-        return updater(initialVotes)
-      }
-      return updater
+      latest.state = typeof updater === 'function' ? updater(latest.state) : updater
+      return latest.state
     }
     
     try {
-      const result = await this.executeCode(testCode, { 
+      await this.executeCode(testCode, { 
         optionId: 'option1', 
         votes: initialVotes, 
         setVotes 
       })
       
+      const next = latest.state
       return {
-        success: result['option1'] === 6 && result['option2'] === 3,
-        output: result
+        success: next['option1'] === 6 && next['option2'] === 3,
+        output: next
       }
     } catch (error) {
       return {
@@ -83,12 +85,12 @@ export class PollMakerTest extends BaseToolTest {
     `
     
     try {
-      const result1 = await this.executeCode(testCode, { 
+      const result1 = await this.executeCode(testCode + "\nreturn handleVote(optionId, votes, setVotes)", { 
         optionId: null, 
         votes: {}, 
         setVotes: () => {} 
       })
-      const result2 = await this.executeCode(testCode, { 
+      const result2 = await this.executeCode(testCode + "\nreturn handleVote(optionId, votes, setVotes)", { 
         optionId: 'option1', 
         votes: null, 
         setVotes: () => {} 
@@ -111,6 +113,7 @@ export class PollMakerTest extends BaseToolTest {
       function calculateTotalVotes(votes) {
         return Object.values(votes).reduce((total, count) => total + count, 0);
       }
+      return calculateTotalVotes(votes)
     `
     
     try {

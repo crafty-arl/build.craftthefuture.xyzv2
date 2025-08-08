@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Play, RotateCcw, Terminal, Download, Settings, Save, FileText, Code2, Trash2 } from 'lucide-react'
 import { ExportDialog } from '@/components/export-dialog'
-import { ReactCodeGenerator } from '@/lib/utils/reactCodeGenerator'
 
 interface SandboxTemplate {
   id: string
@@ -461,13 +460,13 @@ export default function SandboxPage() {
   const [showSettings, setShowSettings] = useState(false)
   const [sandboxKey, setSandboxKey] = useState(0)
   const [savedSandboxes, setSavedSandboxes] = useState<Array<{id: string, name: string, code: string, timestamp: string}>>([])
-  const [componentName, setComponentName] = useState('MyComponent')
+  const [componentName, setComponentName] = useState('Counter')
 
   // Function to extract component name from code
   const extractComponentName = (code: string): string => {
-    const componentMatch = code.match(/function\s+(\w+)\s*\(/);
-    if (componentMatch) {
-      return componentMatch[1];
+    const functionMatch = code.match(/function\s+(\w+)\s*\(/);
+    if (functionMatch) {
+      return functionMatch[1];
     }
     // If no function found, look for export default
     const exportMatch = code.match(/export\s+default\s+(\w+)/);
@@ -475,6 +474,58 @@ export default function SandboxPage() {
       return exportMatch[1];
     }
     return 'MyComponent';
+  }
+
+  // Generate properly formatted React code
+  const generateReactCode = (code: string): string => {
+    if (!code.trim()) {
+      return `import React from 'react';
+
+function MyComponent() {
+  return (
+    <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
+      <h1>Welcome to the Sandbox!</h1>
+      <p>Start coding your React component here.</p>
+    </div>
+  );
+}
+
+export default MyComponent;`;
+    }
+
+    // If code already has imports and proper structure, return as is
+    if (code.includes('import React') && code.includes('export default')) {
+      return code;
+    }
+
+    // If code has a component but no imports/exports, add them
+    if (code.includes('function ') || code.includes('const ')) {
+      const cleanCode = code.replace(/export\s+default\s+\w+;?\s*$/, '').trim();
+      const componentMatch = cleanCode.match(/function\s+(\w+)\s*\(|const\s+(\w+)\s*=/);
+      const componentName = componentMatch ? (componentMatch[1] || componentMatch[2]) : 'MyComponent';
+      
+      return `import React from 'react';
+
+${cleanCode}
+
+export default ${componentName};`;
+    }
+
+    // Otherwise wrap in a component
+    return `import React from 'react';
+
+function MyComponent() {
+  return (
+    <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
+      <h1>Your Component</h1>
+      <div>
+        {/* ${code} */}
+      </div>
+    </div>
+  );
+}
+
+export default MyComponent;`;
   }
 
   // Load saved sandboxes from localStorage
@@ -488,6 +539,12 @@ export default function SandboxPage() {
       }
     }
   }, [])
+
+  // Update component name when code changes
+  useEffect(() => {
+    const newComponentName = extractComponentName(currentCode);
+    setComponentName(newComponentName);
+  }, [currentCode]);
 
   const saveSandbox = () => {
     const name = prompt('Enter a name for this sandbox:')
@@ -506,7 +563,6 @@ export default function SandboxPage() {
 
   const loadSandbox = (sandbox: typeof savedSandboxes[0]) => {
     setCurrentCode(sandbox.code)
-    setComponentName(extractComponentName(sandbox.code))
     setSandboxKey(prev => prev + 1)
   }
 
@@ -519,7 +575,6 @@ export default function SandboxPage() {
   const selectTemplate = (template: SandboxTemplate) => {
     setSelectedTemplate(template)
     setCurrentCode(template.code)
-    setComponentName(extractComponentName(template.code))
     setSandboxKey(prev => prev + 1)
     setShowTemplates(false)
   }
@@ -531,8 +586,11 @@ export default function SandboxPage() {
 
   const clearCode = () => {
     setCurrentCode('')
-    setComponentName('MyComponent')
     setSandboxKey(prev => prev + 1)
+  }
+
+  const handleCodeChange = (newCode: string) => {
+    setCurrentCode(newCode)
   }
 
   return (
@@ -576,40 +634,26 @@ export default function SandboxPage() {
 
       {/* Main Content */}
       <div className="flex flex-col lg:flex-row h-[calc(100vh-140px)]">
-        {/* Left Panel - Code Editor */}
+        {/* Code Editor */}
         <div className="w-full lg:w-1/2 border-b lg:border-b-0 lg:border-r border-[#1E1E1E] h-1/2 lg:h-full">
           <Sandpack
-            key={`sandbox-${sandboxKey}`}
+            key={`editor-${sandboxKey}`}
             template="react"
             files={{
               "/App.js": {
-                code: (() => {
-                  // Use ReactCodeGenerator for proper code generation
-                  if (!currentCode.trim()) {
-                    return ReactCodeGenerator.generateReactCode('', componentName)
-                  }
-                  return ReactCodeGenerator.generateReactCode(currentCode, componentName)
-                })(),
+                code: generateReactCode(currentCode),
                 active: true
               }
             }}
-            theme={{
-              colors: {
-                surface1: "#1E1E1E",
-                surface2: "#1E1E1E",
-                surface3: "#1E1E1E"
-              }
+            theme="dark"
+            options={{
+              showNavigator: false,
+              showTabs: false,
+              showLineNumbers: true,
+              showInlineErrors: true,
+              wrapContent: true,
+              editorHeight: "100%"
             }}
-                          options={{
-                showNavigator: false,
-                showTabs: false,
-                showLineNumbers: true,
-                showInlineErrors: true,
-                wrapContent: true,
-                editorHeight: "calc(50vh - 70px)",
-                layout: "preview",
-                editorWidthPercentage: 100
-              }}
             customSetup={{
               dependencies: {
                 "react": "^18.0.0",
@@ -619,108 +663,34 @@ export default function SandboxPage() {
           />
         </div>
 
-        {/* Right Panel - Live Preview */}
+        {/* Live Preview */}
         <div className="w-full lg:w-1/2 h-1/2 lg:h-full">
-          <div className="h-full">
-            <Sandpack
-              key={`preview-sandbox-${sandboxKey}`}
-              template="react"
-                              files={{
-                "/App.js": {
-                  code: (() => {
-                    const cleanedCode = currentCode.replace(/export default.*;?\s*$/, '')
-                    // If code is empty, provide a default component
-                    if (!cleanedCode.trim()) {
-                      return `import React from 'react';
-
-function ${componentName}() {
-  return (
-    <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
-      <h1>Welcome to the Sandbox!</h1>
-      <p>Start coding your React component here.</p>
-      <p>Your component will appear below.</p>
-    </div>
-  );
-}
-
-function App() {
-  return <${componentName} />
-}
-
-export default App;`
-                    }
-                    
-                    // Check if the code contains a component definition
-                    const hasComponent = cleanedCode.includes('function') || cleanedCode.includes('const') || cleanedCode.includes('class')
-                    
-                    if (!hasComponent) {
-                      // If no component found, wrap the code in a component
-                      return `import React from 'react';
-
-function ${componentName}() {
-  return (
-    <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
-      <h1>Your Component</h1>
-      <div>
-        ${cleanedCode || '// Your code will appear here'}
-      </div>
-    </div>
-  );
-}
-
-function App() {
-  return <${componentName} />
-}
-
-export default App;`
-                    }
-                    
-                    // Extract the actual component name from the code
-                    let actualComponentName = componentName;
-                    
-                    // Try to find function component
-                    const functionMatch = cleanedCode.match(/function\s+(\w+)\s*\(/);
-                    if (functionMatch) {
-                      actualComponentName = functionMatch[1];
-                    } else {
-                      // Try to find const component
-                      const constMatch = cleanedCode.match(/const\s+(\w+)\s*=/);
-                      if (constMatch) {
-                        actualComponentName = constMatch[1];
-                      }
-                    }
-                    
-                    const finalCode = `${cleanedCode}\n\nfunction App() {\n  return <${actualComponentName} />\n}\n\nexport default App;`
-                    return finalCode
-                  })(),
-                  active: true
-                }
-              }}
-              theme={{
-                colors: {
-                  surface1: "#1E1E1E",
-                  surface2: "#1E1E1E",
-                  surface3: "#1E1E1E"
-                }
-              }}
-              options={{
-                showNavigator: false,
-                showTabs: false,
-                showLineNumbers: false,
-                showInlineErrors: false,
-                wrapContent: true,
-                editorHeight: "calc(100vh - 140px)",
-                layout: "preview",
-                editorWidthPercentage: 0
-              }}
-              customSetup={{
-                dependencies: {
-                  "react": "^18.0.0",
-                  "react-dom": "^18.0.0"
-                }
-              }}
-            />
-          </div>
+          <Sandpack
+            key={`preview-${sandboxKey}`}
+            template="react"
+            files={{
+              "/App.js": {
+                code: generateReactCode(currentCode),
+                active: true
+              }
+            }}
+            theme="dark"
+            options={{
+              showNavigator: false,
+              showTabs: false,
+              showLineNumbers: false,
+              showInlineErrors: false,
+              wrapContent: true,
+              editorHeight: "100%",
+              layout: "preview"
+            }}
+            customSetup={{
+              dependencies: {
+                "react": "^18.0.0",
+                "react-dom": "^18.0.0"
+              }
+            }}
+          />
         </div>
       </div>
 
@@ -834,7 +804,7 @@ export default App;`
           <DialogTrigger asChild>
             <Button
               variant="outline"
-              className="border-[#1E1E1E] text-white hover:bg-[#121212] px-4 py-2"
+              className="fixed bottom-20 right-4 border-[#1E1E1E] text-white hover:bg-[#121212] px-4 py-2"
             >
               <FileText className="h-4 w-4 mr-2" />
               Saved ({savedSandboxes.length})

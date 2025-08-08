@@ -42,6 +42,7 @@ export class DateCalculatorTest extends BaseToolTest {
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         return diffDays;
       }
+      return calculateDateDifference(startDate, endDate)
     `
     
     const startDate = new Date('2024-01-01')
@@ -72,8 +73,8 @@ export class DateCalculatorTest extends BaseToolTest {
     `
     
     try {
-      const result1 = await this.executeCode(testCode, { startDate: null, endDate: new Date() })
-      const result2 = await this.executeCode(testCode, { startDate: new Date(), endDate: null })
+      const result1 = await this.executeCode(testCode + "\nreturn calculateDateDifference(startDate, endDate)", { startDate: null, endDate: new Date() })
+      const result2 = await this.executeCode(testCode + "\nreturn calculateDateDifference(startDate, endDate)", { startDate: new Date(), endDate: null })
       
       return {
         success: result1 === 'Select both dates' && result2 === 'Select both dates',
@@ -99,13 +100,13 @@ export class DateCalculatorTest extends BaseToolTest {
     
     try {
       // Same day
-      const sameDay = await this.executeCode(testCode, { 
+      const sameDay = await this.executeCode(testCode + "\nreturn calculateDateDifference(startDate, endDate)", { 
         startDate: new Date('2024-01-01'), 
         endDate: new Date('2024-01-01') 
       })
       
       // Future date
-      const futureDate = await this.executeCode(testCode, { 
+      const futureDate = await this.executeCode(testCode + "\nreturn calculateDateDifference(startDate, endDate)", { 
         startDate: new Date('2024-01-01'), 
         endDate: new Date('2024-12-31') 
       })
