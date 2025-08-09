@@ -1,24 +1,31 @@
-# 🚀 Build Studio - Streamlined Development Platform
+# 🚀 Build Studio
 
-A minimalist, efficient coding sandbox with integrated user authentication and Cloudflare Workers backend.
+A **minimalist, efficient coding sandbox** with integrated OAuth authentication (GitHub & Google) and hot reloading for immediate development results.
 
-## ✨ **Features**
+## ✨ Features
 
-- **🔐 User Authentication**: Secure login/registration system
-- **🗄️ Cloudflare D1 Database**: SQLite-compatible database
-- **⚡ KV Storage**: Fast user data lookups
-- **🎨 Modern UI**: Clean, responsive design with Tailwind CSS
-- **🚀 Fast Development**: Hot reload with Turbopack
-- **☁️ Edge Computing**: Deploy anywhere with Cloudflare Workers
+- 🔐 **OAuth Authentication**: Secure login via GitHub & Google
+- ⚡ **Hot Reloading**: Instant feedback during development
+- 🎨 **Modern UI**: Clean, responsive design with Tailwind CSS
+- 🔒 **Session Management**: Automatic user session handling
+- 📱 **Mobile Friendly**: Responsive design for all devices
+- 🚀 **TypeScript**: Full type safety and IntelliSense
+- 🎯 **Streamlined Setup**: Get running in minutes, not hours
 
-## 🚀 **Quick Start**
+## 🚀 Quick Start
 
-### **Option 1: Automated Setup**
+### Automated Setup (Recommended)
+
 ```bash
+# Clone and setup in one command
+git clone <your-repo>
+cd build-studio
+chmod +x scripts/setup.sh
 ./scripts/setup.sh
 ```
 
-### **Option 2: Manual Setup**
+### Manual Setup
+
 ```bash
 # Install dependencies
 npm install
@@ -26,83 +33,109 @@ npm install
 # Copy environment template
 cp .env.local.example .env.local
 
-# Update .env.local with your credentials
-# Run setup commands from SETUP.md
+# Configure OAuth apps (see SETUP.md)
+# Start development
+npm run dev
 ```
 
-## 📁 **Project Structure**
+## 🔧 OAuth Configuration
+
+### 1. GitHub OAuth App
+- **Homepage**: `http://localhost:3000`
+- **Callback**: `http://localhost:3000/api/auth/callback/github`
+
+### 2. Google OAuth App
+- **Redirect URIs**: 
+  - `http://localhost:3000/api/auth/callback/google`
+  - `http://localhost:3000/auth`
+
+### 3. Environment Variables
+```bash
+# .env.local
+NEXTAUTH_SECRET=your-secret-key
+GITHUB_ID=your-github-oauth-id
+GITHUB_SECRET=your-github-oauth-secret
+GOOGLE_ID=your-google-oauth-id
+GOOGLE_SECRET=your-google-oauth-secret
+```
+
+## 🏗️ Project Structure
 
 ```
-├── src/
-│   ├── worker.ts          # Cloudflare Worker API
-│   └── schema.sql         # Database schema
-├── components/
-│   └── auth/              # Authentication components
-├── lib/
-│   └── auth.ts            # Auth service
 ├── app/
-│   └── auth/              # Demo authentication page
-├── wrangler.toml          # Cloudflare configuration
-├── .env.local.example     # Environment template
-├── SETUP.md               # Detailed setup guide
+│   ├── api/auth/[...nextauth]/route.ts  # OAuth API routes
+│   ├── auth/page.tsx                     # Authentication page
+│   └── layout.tsx                        # Root layout
+├── components/
+│   ├── auth/
+│   │   ├── AuthModal.tsx                 # OAuth modal
+│   │   └── OAuthButtons.tsx              # Login buttons
+│   └── providers/
+│       └── NextAuthProvider.tsx          # Auth context
+├── lib/
+│   └── auth.ts                           # Auth service
+├── types/
+│   └── next-auth.d.ts                    # Type extensions
 └── scripts/
-    └── setup.sh           # Automated setup script
+    └── setup.sh                          # Auto-setup script
 ```
 
-## 🔧 **Development Commands**
+## 🚀 Development Commands
 
 ```bash
-# Frontend
-npm run dev                # Start Next.js (http://localhost:3000)
-
-# Backend
-npm run worker:dev        # Start Worker locally (http://localhost:8787)
-
-# Database
-npm run db:create         # Create D1 database
-npm run db:local          # Local database operations
-npm run db:migrate        # Production migrations
-
-# Deployment
-npm run worker:deploy     # Deploy to Cloudflare
-npm run build            # Build for production
+npm run dev              # Start dev server (hot reload)
+npm run build           # Build for production
+npm run start           # Start production server
+npm run lint            # Run ESLint
 ```
 
-## 🌐 **Demo**
+## 🎯 Demo
 
-Visit `/auth` to see the authentication system in action:
-- User registration
-- Secure login
-- Session management
-- Protected routes
+Visit `/auth` to see the OAuth authentication system in action:
 
-## 📚 **Documentation**
+1. **Click "Get Started"** → Opens OAuth modal
+2. **Choose Provider** → GitHub or Google
+3. **Authenticate** → Redirects to provider
+4. **Success** → Returns authenticated with session
 
-- **[SETUP.md](SETUP.md)** - Complete setup guide
-- **[Cloudflare Workers](https://developers.cloudflare.com/workers/)** - Backend documentation
-- **[Next.js](https://nextjs.org/docs)** - Frontend framework
+## 📚 Documentation
 
-## 🔐 **Authentication Flow**
+- **[SETUP.md](./SETUP.md)**: Detailed setup instructions
+- **[OAuth Configuration](./SETUP.md#environment-configuration)**: Step-by-step OAuth setup
+- **[Troubleshooting](./SETUP.md#troubleshooting)**: Common issues and solutions
 
-1. **Registration**: User creates account → stored in D1 + KV
-2. **Login**: Credentials validated → session token returned
-3. **Session**: Token stored in localStorage
-4. **API Calls**: Include token for authenticated requests
+## 🔐 Authentication Flow
 
-## 🚀 **Deployment**
-
-### **Cloudflare Worker**
-```bash
-npm run worker:deploy
+```
+User → OAuth Provider → NextAuth → Session → Protected Routes
+  ↓         ↓           ↓         ↓         ↓
+Click    Authenticate  Validate  Store     Access
+Button   User         Token     Session   Features
 ```
 
-### **Frontend**
-```bash
-npm run build
-npm run start
-```
+## 🛠️ Tech Stack
 
-## 🤝 **Contributing**
+- **Frontend**: Next.js 15 + React 19 + TypeScript
+- **Authentication**: NextAuth.js with OAuth providers
+- **Styling**: Tailwind CSS + Radix UI components
+- **Development**: Hot reloading with Turbopack
+- **Deployment**: Vercel-ready with environment config
+
+## 🚀 Production Deployment
+
+1. **Update Environment Variables**
+   ```bash
+   NEXTAUTH_URL=https://yourdomain.com
+   # Update OAuth callback URLs
+   ```
+
+2. **Build and Deploy**
+   ```bash
+   npm run build
+   npm start
+   ```
+
+## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch
@@ -110,10 +143,18 @@ npm run start
 4. Test thoroughly
 5. Submit a pull request
 
-## 📄 **License**
+## 📄 License
 
-MIT License - see LICENSE file for details
+MIT License - see [LICENSE](LICENSE) for details.
+
+## 🆘 Support
+
+- **Documentation**: [SETUP.md](./SETUP.md)
+- **Issues**: [GitHub Issues](https://github.com/your-repo/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/your-repo/discussions)
 
 ---
 
-**Built with ❤️ using Next.js, Cloudflare Workers, and Tailwind CSS**
+**Built with ❤️ for developers who value efficiency and simplicity.**
+
+*Get started in minutes, not hours. Build Studio - where development meets simplicity.*

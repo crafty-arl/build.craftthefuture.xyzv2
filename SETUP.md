@@ -1,186 +1,230 @@
-# 🚀 Build Studio - Streamlined Development Setup
+# Build Studio Setup Guide
 
-## 📋 **Prerequisites**
-- Node.js 18+ 
-- npm or yarn
-- Cloudflare account
-- Git
+A comprehensive guide to set up Build Studio with OAuth authentication (GitHub & Google) and Cloudflare integration.
 
-## 🛠️ **Quick Start**
+## Prerequisites
 
-### 1. **Install Dependencies**
+- Node.js 18+ and npm
+- GitHub account (for OAuth app)
+- Google account (for OAuth app)
+- Cloudflare account (optional, for additional features)
+
+## Quick Start
+
+### 1. Automated Setup (Recommended)
+
+Run the setup script for immediate results:
+
 ```bash
+chmod +x scripts/setup.sh
+./scripts/setup.sh
+```
+
+### 2. Manual Setup
+
+If you prefer manual setup or the script fails:
+
+```bash
+# Install dependencies
 npm install
-```
 
-### 2. **Environment Configuration**
-
-#### **Copy Environment Template**
-```bash
+# Copy environment template
 cp .env.local.example .env.local
+
+# Install Wrangler globally
+npm install -g wrangler
 ```
 
-#### **Fill Required Variables**
+## Environment Configuration
+
+### 1. Create OAuth Applications
+
+#### GitHub OAuth App
+1. Go to [GitHub Settings > Developer settings > OAuth Apps](https://github.com/settings/developers)
+2. Click "New OAuth App"
+3. Fill in the details:
+   - **Application name**: Build Studio
+   - **Homepage URL**: `http://localhost:3000`
+   - **Authorization callback URL**: `http://localhost:3000/api/auth/callback/github`
+4. Copy the **Client ID** and **Client Secret**
+
+#### Google OAuth App
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select existing
+3. Enable the Google+ API
+4. Go to "Credentials" > "Create Credentials" > "OAuth 2.0 Client IDs"
+5. Set application type to "Web application"
+6. Add authorized redirect URIs:
+   - `http://localhost:3000/api/auth/callback/google`
+   - `http://localhost:3000/auth`
+7. Copy the **Client ID** and **Client Secret**
+
+### 2. Configure Environment Variables
+
+Edit `.env.local` with your OAuth credentials:
+
 ```bash
-# .env.local
+# NextAuth Configuration
 NEXTAUTH_SECRET=your-super-secret-key-here
 NEXTAUTH_URL=http://localhost:3000
 
-# Cloudflare Configuration
+# GitHub OAuth
+GITHUB_ID=your-github-oauth-app-id
+GITHUB_SECRET=your-github-oauth-app-secret
+
+# Google OAuth
+GOOGLE_ID=your-google-oauth-client-id
+GOOGLE_SECRET=your-google-oauth-client-secret
+
+# Cloudflare (optional)
 CLOUDFLARE_ACCOUNT_ID=your-cloudflare-account-id
 CLOUDFLARE_API_TOKEN=your-cloudflare-api-token
-
-# Database (will be created in next step)
-DATABASE_URL=your-d1-database-url
 ```
 
-### 3. **Cloudflare Wrangler Setup**
-
-#### **Login to Cloudflare**
+**Important**: Generate a strong `NEXTAUTH_SECRET`:
 ```bash
-npx wrangler login
+openssl rand -base64 32
 ```
 
-#### **Create D1 Database**
+## Development Workflow
+
+### 1. Start Development Server
+
 ```bash
-npm run db:create
-```
-*Copy the database ID from output and update `wrangler.toml`*
-
-#### **Create KV Namespace**
-```bash
-npx wrangler kv:namespace create "USERS"
-```
-*Copy the namespace ID from output and update `wrangler.toml`*
-
-#### **Update wrangler.toml**
-Replace placeholder IDs with your actual IDs:
-```toml
-[[d1_databases]]
-binding = "DB"
-database_name = "build-studio-db"
-database_id = "your-actual-d1-database-id"
-
-[[kv_namespaces]]
-binding = "USERS"
-id = "your-actual-kv-namespace-id"
-```
-
-### 4. **Database Migration**
-```bash
-# Local development
-npm run db:local
-
-# Production
-npm run db:migrate
-```
-
-### 5. **Start Development**
-```bash
-# Terminal 1: Start Cloudflare Worker
-npm run worker:dev
-
-# Terminal 2: Start Next.js
 npm run dev
 ```
 
-## 🔧 **Development Workflow**
+Your app will be available at `http://localhost:3000` with hot reloading enabled.
 
-### **Frontend Development**
-- **URL**: http://localhost:3000
-- **Hot Reload**: Enabled with Turbopack
-- **Authentication**: Integrated with Cloudflare Worker
+### 2. Test Authentication
 
-### **Backend Development**
-- **Worker URL**: http://localhost:8787
-- **Database**: Local D1 instance
-- **API Endpoints**: 
-  - `POST /api/auth/register` - User registration
-  - `POST /api/auth/login` - User login
-  - `GET /api/users/:username` - Get user profile
+1. Navigate to `/auth`
+2. Click "Get Started"
+3. Choose GitHub or Google OAuth
+4. Complete the OAuth flow
+5. You'll be redirected back and authenticated
 
-### **Database Operations**
-```bash
-# View local database
-npx wrangler d1 execute build-studio-db --local --command="SELECT * FROM users;"
+### 3. Hot Reloading
 
-# Execute SQL file
-npm run db:local
+The development server automatically reloads when you make changes to:
+- React components
+- API routes
+- Configuration files
+- CSS/SCSS files
+
+## Project Structure
+
+```
+├── app/
+│   ├── api/auth/[...nextauth]/route.ts  # OAuth API routes
+│   ├── auth/page.tsx                     # Authentication page
+│   └── layout.tsx                        # Root layout with auth provider
+├── components/
+│   ├── auth/
+│   │   ├── AuthModal.tsx                 # OAuth modal
+│   │   └── OAuthButtons.tsx              # GitHub/Google login buttons
+│   └── providers/
+│       └── NextAuthProvider.tsx          # Auth context provider
+├── lib/
+│   └── auth.ts                           # Authentication service
+├── types/
+│   └── next-auth.d.ts                    # NextAuth type extensions
+├── .env.local.example                    # Environment template
+└── package.json                          # Dependencies and scripts
 ```
 
-## 🚀 **Production Deployment**
+## Authentication Flow
 
-### **Deploy Worker**
+1. **User clicks OAuth button** → Redirects to provider (GitHub/Google)
+2. **Provider authenticates user** → Returns authorization code
+3. **NextAuth exchanges code** → Gets access token and user info
+4. **Session created** → User is authenticated and redirected
+5. **Protected routes** → Check session status automatically
+
+## Features
+
+- ✅ **GitHub OAuth**: Secure authentication via GitHub
+- ✅ **Google OAuth**: Secure authentication via Google
+- ✅ **Session Management**: Automatic session handling
+- ✅ **Type Safety**: Full TypeScript support
+- ✅ **Hot Reloading**: Immediate development feedback
+- ✅ **Responsive UI**: Mobile-friendly design
+- ✅ **Security**: No password storage, OAuth tokens only
+
+## Troubleshooting
+
+### Common Issues
+
+1. **OAuth callback errors**
+   - Verify redirect URIs match exactly
+   - Check environment variables are set
+   - Ensure OAuth apps are properly configured
+
+2. **Session not persisting**
+   - Check `NEXTAUTH_SECRET` is set
+   - Verify `NEXTAUTH_URL` matches your domain
+   - Clear browser cookies/localStorage
+
+3. **Build errors**
+   - Run `npm install` to ensure all dependencies
+   - Check TypeScript compilation with `npm run build`
+   - Verify all imports are correct
+
+### Debug Mode
+
+Enable NextAuth debug mode in `.env.local`:
 ```bash
-npm run worker:deploy
+NEXTAUTH_DEBUG=true
 ```
 
-### **Deploy Frontend**
+## Production Deployment
+
+### Environment Variables
+Update `.env.local` with production URLs:
+```bash
+NEXTAUTH_URL=https://yourdomain.com
+GITHUB_ID=your-prod-github-id
+GITHUB_SECRET=your-prod-github-secret
+GOOGLE_ID=your-prod-google-id
+GOOGLE_SECRET=your-prod-google-secret
+```
+
+### Build and Deploy
 ```bash
 npm run build
-npm run start
+npm start
 ```
 
-## 📁 **Project Structure**
-```
-├── src/
-│   ├── worker.ts          # Cloudflare Worker (API)
-│   └── schema.sql         # Database schema
-├── components/
-│   └── auth/              # Authentication components
-├── lib/
-│   └── auth.ts            # Auth service
-├── wrangler.toml          # Cloudflare configuration
-├── .env.local.example     # Environment template
-└── SETUP.md               # This file
-```
-
-## 🔐 **Authentication Flow**
-
-1. **User Registration**: Creates account in D1 + stores profile in KV
-2. **User Login**: Validates credentials + returns session token
-3. **Session Management**: Token stored in localStorage
-4. **API Calls**: Include session token in headers
-
-## 🐛 **Troubleshooting**
-
-### **Worker Won't Start**
-- Check `wrangler.toml` configuration
-- Verify Cloudflare login: `npx wrangler whoami`
-
-### **Database Connection Issues**
-- Verify database ID in `wrangler.toml`
-- Check if database exists: `npx wrangler d1 list`
-
-### **Environment Variables**
-- Ensure `.env.local` exists and is populated
-- Restart development server after changes
-
-## 📚 **Useful Commands**
+## Useful Commands
 
 ```bash
 # Development
-npm run dev              # Start Next.js
-npm run worker:dev      # Start Worker locally
+npm run dev              # Start dev server with hot reload
+npm run build           # Build for production
+npm run start           # Start production server
+npm run lint            # Run ESLint
 
-# Database
-npm run db:create       # Create new D1 database
-npm run db:migrate      # Run migrations
-npm run db:local        # Local database operations
-
-# Deployment
-npm run worker:deploy   # Deploy Worker to Cloudflare
-npm run build          # Build for production
+# Authentication
+# OAuth is handled automatically by NextAuth.js
+# No manual commands needed for auth operations
 ```
 
-## 🎯 **Next Steps**
+## Next Steps
 
-1. **Customize Authentication**: Add OAuth providers
-2. **Extend Database**: Add more tables for your use case
-3. **Add Middleware**: Implement rate limiting, validation
-4. **Monitoring**: Set up Cloudflare Analytics
-5. **Testing**: Add Jest tests for components and API
+After setup, you can:
+1. Customize the OAuth providers
+2. Add more authentication options
+3. Implement protected routes
+4. Add user profile management
+5. Integrate with Cloudflare services
+
+## Support
+
+- [NextAuth.js Documentation](https://next-auth.js.org/)
+- [GitHub OAuth Apps](https://docs.github.com/en/developers/apps/building-oauth-apps)
+- [Google OAuth 2.0](https://developers.google.com/identity/protocols/oauth2)
+- [Next.js Documentation](https://nextjs.org/docs)
 
 ---
 
-**Need Help?** Check the [Cloudflare Workers docs](https://developers.cloudflare.com/workers/) or [Next.js docs](https://nextjs.org/docs).
+**Note**: This setup provides immediate results with hot reloading and secure OAuth authentication. The system automatically handles user sessions and provides a seamless development experience.

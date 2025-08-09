@@ -1,288 +1,146 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Github, Bug, ArrowRight, Code2, Calendar, User } from 'lucide-react'
-import ProfilePage from '../components/profile-page'
-import { loadToolsFromJson, fallbackTools, type HomepageTool } from '@/lib/utils/toolLoader'
+import Link from 'next/link';
+import { Github, Chrome, Zap, Shield, Smartphone, Code } from 'lucide-react';
 
-type Tool = HomepageTool
-
-export default function BuildPlatform() {
-  const router = useRouter()
-  const [tools, setTools] = useState<Tool[]>(fallbackTools)
-
-  const [showProfile, setShowProfile] = useState(false)
-  const [user, setUser] = useState<{username: string, avatar: string, name: string} | null>(null)
-  const [isLoggingIn, setIsLoggingIn] = useState(false)
-
-    // Load tools from JSON on component mount
-  useEffect(() => {
-    const loadTools = async () => {
-      try {
-        const loadedTools = await loadToolsFromJson()
-        console.log('Loaded tools:', loadedTools.map(t => ({ id: t.id, title: t.title })))
-        if (loadedTools.length > 0) {
-          setTools(loadedTools)
-        }
-      } catch (error) {
-        console.error('Failed to load tools from JSON:', error)
-        // Keep fallback tools if loading fails
-      }
-    }
-
-    loadTools()
-  }, [])
-
-  const handleGitHubLogin = async () => {
-    setIsLoggingIn(true)
-    setTimeout(() => {
-      setUser({
-        username: 'codecrafter',
-        avatar: '/github-avatar.png',
-        name: 'Code Crafter'
-      })
-      setIsLoggingIn(false)
-    }, 1500)
-  }
-
-
-
-  const selectTool = (tool: Tool) => {
-    router.push(`/tool/${tool.id}`)
-  }
-
-  if (showProfile) {
-    return <ProfilePage onBack={() => setShowProfile(false)} />
-  }
-
-  // Main Studio View
+export default function HomePage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-background text-foreground">
-      {/* Header */}
-      <div className="border-b border-[#1E1E1E] px-4 sm:px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 overflow-hidden">
-            <Code2 className="h-5 w-5 sm:h-6 sm:w-6 text-[#7EE787] shrink-0" />
-            <span className="text-base sm:text-lg font-bold truncate">/build</span>
-            <div className="hidden md:flex items-center gap-4">
-              <a 
-                href="/font-test" 
-                className="text-xs text-gray-400 hover:text-[#7EE787] transition-colors"
-                title="Test font accessibility"
-              >
-                Test Fonts
-              </a>
-              <a 
-                href="/sandbox" 
-                className="text-xs text-gray-400 hover:text-[#7EE787] transition-colors"
-                title="Free coding sandbox"
-              >
-                Sandbox
-              </a>
-            </div>
-            
-            {/* Mobile menu button */}
-            <button className="md:hidden p-1 text-gray-400 hover:text-[#7EE787] transition-colors">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-          </div>
-          <div className="flex items-center gap-2 sm:gap-4">
-            {user ? (
-              <div className="flex items-center gap-2 px-2 sm:px-3 py-1.5 bg-[#1E1E1E] rounded-full cursor-pointer hover:bg-[#2A2A2A]" onClick={() => setShowProfile(true)}>
-                <img 
-                  src={user.avatar || "/placeholder.svg"} 
-                  alt={user.username}
-                  className="w-4 h-4 sm:w-5 sm:h-5 rounded-full"
-                />
-                <span className="text-xs sm:text-sm text-gray-300 hidden sm:inline">{user.username}</span>
-              </div>
-            ) : (
-              <Button
-                onClick={handleGitHubLogin}
-                disabled={isLoggingIn}
-                className="bg-[#7EE787] text-black hover:bg-[#6BD975] font-medium text-xs sm:text-sm px-3 sm:px-4"
-                size="sm"
-              >
-                {isLoggingIn ? (
-                  <div className="flex items-center gap-1 sm:gap-2">
-                    <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-black"></div>
-                    <span className="hidden sm:inline">Connecting...</span>
-                  </div>
-                ) : (
-                  <>
-                    <Github className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
-                    <span className="hidden sm:inline">Connect GitHub</span>
-                    <span className="sm:hidden">Connect</span>
-                  </>
-                )}
-              </Button>
-            )}
-          </div>
-        </div>
-      </div>
-
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Hero Section */}
-      <div className="text-center py-8 sm:py-12 lg:py-16 px-4 sm:px-6">
-        <div className="max-w-4xl mx-auto">
-          <Badge className="mb-4 sm:mb-6 bg-[#1E1E1E] text-[#7EE787] border-[#7EE787] text-xs sm:text-sm">
-            Season 0
-          </Badge>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 leading-tight">
-            Build. Debug. Ship.
-          </h1>
-          <p className="text-lg sm:text-xl text-gray-400 mb-6 sm:mb-8 max-w-2xl mx-auto">
-            Welcome to S-0. Your first tools await.<br className="hidden sm:block" />
-            <span className="block sm:inline">No forks. No remixes. Just you and the code.</span>
-          </p>
-          {user ? (
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
-              <Button 
-                size="lg" 
-                className="bg-[#7EE787] text-black hover:bg-[#6BD975] font-medium w-full sm:w-auto"
-              >
-                <Bug className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-                Continue Build
-                <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 ml-2" />
-              </Button>
-              <div className="text-sm text-gray-400 order-first sm:order-none">
-                Welcome back, {user.name} 👋
+      <div className="relative overflow-hidden">
+        <div className="max-w-7xl mx-auto">
+          <div className="relative z-10 pb-8 sm:pb-16 md:pb-20 lg:max-w-2xl lg:w-full lg:pb-28 xl:pb-32">
+            <main className="mt-10 mx-auto max-w-7xl px-4 sm:mt-12 sm:px-6 md:mt-16 lg:mt-20 lg:px-8 xl:mt-28">
+              <div className="sm:text-center lg:text-left">
+                <h1 className="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl">
+                  <span className="block xl:inline">Build Studio</span>{' '}
+                  <span className="block text-indigo-600 xl:inline">OAuth Ready</span>
+                </h1>
+                <p className="mt-3 text-base text-gray-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
+                  A minimalist, efficient coding sandbox with integrated OAuth authentication. 
+                  Get started in minutes with GitHub and Google login.
+                </p>
+                <div className="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start">
+                  <div className="rounded-md shadow">
+                    <Link
+                      href="/auth"
+                      className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 md:py-4 md:text-lg md:px-10"
+                    >
+                      Try OAuth Demo
+                    </Link>
+                  </div>
+                  <div className="mt-3 sm:mt-0 sm:ml-3">
+                    <Link
+                      href="https://github.com/your-repo"
+                      className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 md:py-4 md:text-lg md:px-10"
+                    >
+                      View Source
+                    </Link>
+                  </div>
+                </div>
               </div>
-            </div>
-          ) : (
-            <div className="space-y-3 sm:space-y-4">
-              <Button 
-                size="lg" 
-                className="bg-[#7EE787] text-black hover:bg-[#6BD975] font-medium w-full sm:w-auto"
-                onClick={handleGitHubLogin}
-                disabled={isLoggingIn}
-              >
-                <Bug className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-                {isLoggingIn ? 'Connecting...' : 'Begin Your Build'}
-                <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 ml-2" />
-              </Button>
-              <p className="text-sm text-gray-500">
-                Sign in to track your progress
-              </p>
-            </div>
-          )}
+            </main>
+          </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 pb-12 sm:pb-20">
-        {/* Stats Section */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
-          <Card className="bg-[#1E1E1E] border-[#2A2A2A]">
-            <CardContent className="p-3 sm:p-4">
-              <div className="flex items-center gap-2 sm:gap-3">
-                <div className="p-1.5 sm:p-2 bg-[#7EE787]/10 rounded-lg">
-                  <Code2 className="h-4 w-4 sm:h-5 sm:w-5 text-[#7EE787]" />
-                </div>
-                <div>
-                  <p className="text-lg sm:text-2xl font-bold">{tools.length}</p>
-                  <p className="text-xs sm:text-sm text-gray-400">Tools Available</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-[#1E1E1E] border-[#2A2A2A]">
-            <CardContent className="p-3 sm:p-4">
-              <div className="flex items-center gap-2 sm:gap-3">
-                <div className="p-1.5 sm:p-2 bg-yellow-500/10 rounded-lg">
-                  <Bug className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500" />
-                </div>
-                <div>
-                  <p className="text-lg sm:text-2xl font-bold">{tools.reduce((sum, tool) => sum + tool.bugs.length, 0)}</p>
-                  <p className="text-xs sm:text-sm text-gray-400">Bugs to Fix</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-[#1E1E1E] border-[#2A2A2A]">
-            <CardContent className="p-3 sm:p-4">
-              <div className="flex items-center gap-2 sm:gap-3">
-                <div className="p-1.5 sm:p-2 bg-blue-500/10 rounded-lg">
-                  <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500" />
-                </div>
-                <div>
-                  <p className="text-lg sm:text-2xl font-bold">S-0</p>
-                  <p className="text-xs sm:text-sm text-gray-400">Current Season</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-[#1E1E1E] border-[#2A2A2A]">
-            <CardContent className="p-3 sm:p-4">
-              <div className="flex items-center gap-2 sm:gap-3">
-                <div className="p-1.5 sm:p-2 bg-purple-500/10 rounded-lg">
-                  <User className="h-4 w-4 sm:h-5 sm:w-5 text-purple-500" />
-                </div>
-                <div>
-                  <p className="text-lg sm:text-2xl font-bold">{user ? '1' : '0'}</p>
-                  <p className="text-xs sm:text-sm text-gray-400">Builders Online</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+      {/* Features Section */}
+      <div className="py-12 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="lg:text-center">
+            <h2 className="text-base text-indigo-600 font-semibold tracking-wide uppercase">Features</h2>
+            <p className="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
+              Everything you need for modern development
+            </p>
+            <p className="mt-4 max-w-2xl text-xl text-gray-500 lg:mx-auto">
+              Streamlined authentication, hot reloading, and a beautiful UI that gets you coding faster.
+            </p>
+          </div>
 
-        {/* Tools Grid */}
-        <div className="space-y-4 sm:space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl sm:text-2xl font-bold">Your Tools</h2>
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className="border-[#2A2A2A] text-gray-400 text-xs sm:text-sm">
-                {tools.length} tools
-              </Badge>
+          <div className="mt-10">
+            <div className="space-y-10 md:space-y-0 md:grid md:grid-cols-2 md:gap-x-8 md:gap-y-10">
+              <div className="relative">
+                <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
+                  <Github className="h-6 w-6" />
+                </div>
+                <p className="ml-16 text-lg leading-6 font-medium text-gray-900">GitHub OAuth</p>
+                <p className="mt-2 ml-16 text-base text-gray-500">
+                  Secure authentication using your GitHub account. No passwords to remember.
+                </p>
+              </div>
+
+              <div className="relative">
+                <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
+                  <Chrome className="h-6 w-6" />
+                </div>
+                <p className="ml-16 text-lg leading-6 font-medium text-gray-900">Google OAuth</p>
+                <p className="mt-2 ml-16 text-base text-gray-500">
+                  Quick sign-in with your Google account. Seamless integration.
+                </p>
+              </div>
+
+              <div className="relative">
+                <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
+                  <Zap className="h-6 w-6" />
+                </div>
+                <p className="ml-16 text-lg leading-6 font-medium text-gray-900">Hot Reloading</p>
+                <p className="mt-2 ml-16 text-base text-gray-500">
+                  Instant feedback with Next.js Turbopack. See changes immediately.
+                </p>
+              </div>
+
+              <div className="relative">
+                <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
+                  <Shield className="h-6 w-6" />
+                </div>
+                <p className="ml-16 text-lg leading-6 font-medium text-gray-900">Secure Sessions</p>
+                <p className="mt-2 ml-16 text-base text-gray-500">
+                  NextAuth.js handles all authentication securely. No manual token management.
+                </p>
+              </div>
+
+              <div className="relative">
+                <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
+                  <Smartphone className="h-6 w-6" />
+                </div>
+                <p className="ml-16 text-lg leading-6 font-medium text-gray-900">Mobile First</p>
+                <p className="mt-2 ml-16 text-base text-gray-500">
+                  Responsive design that works perfectly on all devices.
+                </p>
+              </div>
+
+              <div className="relative">
+                <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
+                  <Code className="h-6 w-6" />
+                </div>
+                <p className="ml-16 text-lg leading-6 font-medium text-gray-900">TypeScript</p>
+                <p className="mt-2 ml-16 text-base text-gray-500">
+                  Full type safety and IntelliSense for better development experience.
+                </p>
+              </div>
             </div>
           </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {tools.map((tool) => (
-              <Card 
-                key={tool.id} 
-                className="bg-[#1E1E1E] border-[#2A2A2A] hover:border-[#7EE787] transition-colors cursor-pointer group"
-                onClick={() => selectTool(tool)}
-              >
-                <CardContent className="p-4 sm:p-6">
-                  <div className="flex items-start justify-between mb-3 sm:mb-4">
-                    <div className="p-1.5 sm:p-2 bg-[#7EE787]/10 rounded-lg">
-                      <tool.icon className="h-5 w-5 sm:h-6 sm:w-6 text-[#7EE787]" />
-                    </div>
-                    <Badge className="bg-[#7EE787] text-black font-medium text-xs sm:text-sm">
-                      {tool.difficulty}
-                    </Badge>
-                  </div>
-                  
-                  <h3 className="text-base sm:text-lg font-semibold mb-2 group-hover:text-[#7EE787] transition-colors">
-                    {tool.title}
-                  </h3>
-                  <p className="text-gray-400 text-sm mb-3 sm:mb-4 line-clamp-2">
-                    {tool.description}
-                  </p>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5 sm:gap-2">
-                      <Bug className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-500" />
-                      <span className="text-xs sm:text-sm text-gray-400">{tool.bugs.length} bugs</span>
-                    </div>
-                    <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4 text-gray-400 group-hover:text-[#7EE787] transition-colors" />
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+        </div>
+      </div>
+
+      {/* CTA Section */}
+      <div className="bg-indigo-700">
+        <div className="max-w-2xl mx-auto text-center py-16 px-4 sm:py-20 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-extrabold text-white sm:text-4xl">
+            <span className="block">Ready to get started?</span>
+            <span className="block">Test OAuth authentication now.</span>
+          </h2>
+          <p className="mt-4 text-lg leading-6 text-indigo-200">
+            Experience the streamlined authentication flow with GitHub and Google OAuth.
+          </p>
+          <Link
+            href="/auth"
+            className="mt-8 w-full inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-indigo-600 bg-white hover:bg-indigo-50 sm:w-auto"
+          >
+            Try OAuth Demo
+          </Link>
         </div>
       </div>
     </div>
-  )
+  );
 }
