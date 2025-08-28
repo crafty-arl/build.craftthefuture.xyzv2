@@ -1,7 +1,7 @@
 'use client'
 
 import { BugHighlighter, type BugLocation } from "@/lib/utils/bugHighlighter"
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 
 interface BugDetectorProps {
   toolId: string
@@ -10,11 +10,8 @@ interface BugDetectorProps {
 }
 
 export const BugDetector = ({ toolId, currentCode, onBugsDetected }: BugDetectorProps) => {
-  const [detectedBugs, setDetectedBugs] = useState<BugLocation[]>([])
-  
   useEffect(() => {
     const bugs = BugHighlighter.getBugLocations(toolId, currentCode)
-    setDetectedBugs(bugs)
     onBugsDetected(bugs)
   }, [toolId, currentCode, onBugsDetected])
   

@@ -59,8 +59,8 @@ export interface BugContext {
 
 export interface TestCase {
   name: string;
-  input: any;
-  expectedOutput: any;
+  input: unknown;
+  expectedOutput: unknown;
   description: string;
 }
 
@@ -68,7 +68,7 @@ export interface MLPrediction {
   isFixed: boolean;
   confidence: number;
   reasoning: string;
-  features: Record<string, any>;
+  features: Record<string, unknown>;
 }
 
 export interface PerformanceMetrics {

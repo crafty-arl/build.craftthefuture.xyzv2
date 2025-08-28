@@ -1,7 +1,7 @@
 // Integration layer for functional bug detection
 // This replaces the pattern-based system with actual behavior testing
 
-import { FunctionalTestSystem, type ToolFunctionalTestResult, type FunctionalTestResult } from './functionalTestSystem'
+import { FunctionalTestSystem } from './functionalTestSystem'
 
 export interface BugDetectionResult {
   toolId: string

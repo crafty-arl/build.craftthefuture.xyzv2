@@ -50,7 +50,7 @@ export function TestRunner({ toolId, code }: TestRunnerProps) {
     // Simulate the same tests that run in the backend
     const compilation = testCompilation(code)
     const bugDetection = testBugDetection(toolId, code)
-    const functionality = testFunctionality(toolId, code)
+    const functionality = testFunctionality(toolId)
     const frontendConsistency = testFrontendConsistency(toolId, code)
     
     const allPassed = compilation.success && bugDetection.success && functionality.success && frontendConsistency.success
@@ -144,7 +144,7 @@ export function TestRunner({ toolId, code }: TestRunnerProps) {
     }
   }
   
-  const testFunctionality = (toolId: string, _code: string): TestResult => {
+  const testFunctionality = (toolId: string): TestResult => {
     try {
       // Just check if function can be created (same as backend)
       const functionName = getFunctionName(toolId)

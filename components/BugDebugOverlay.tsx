@@ -43,7 +43,21 @@ export function BugDebugOverlay({
   const [showRawData, setShowRawData] = useState(false)
   const [completionPercentage, setCompletionPercentage] = useState(0)
   const [error, setError] = useState<string | null>(null)
-  const [debugInfo, setDebugInfo] = useState<any>(null)
+  const [debugInfo, setDebugInfo] = useState<{
+    toolId?: string;
+    codeLength?: number;
+    uiBugCount?: number;
+    testBugCount?: number;
+    highConfidenceFixed?: number;
+    lowConfidenceFixed?: number;
+    notFixed?: number;
+    completionPercentage?: number;
+    allFixed?: boolean;
+    confidenceThreshold?: number;
+    executionTime?: number;
+    fixedBugs?: number[];
+    testResults?: unknown[];
+  } | null>(null)
 
   const runTests = async () => {
     if (!currentCode.trim()) {
@@ -66,7 +80,7 @@ export function BugDebugOverlay({
       console.log(`[BugDebugOverlay] Raw results:`, results)
       console.log(`[BugDebugOverlay] Test execution time: ${endTime - startTime}ms`)
       
-      const mappedResults: TestResult[] = results.testResults.map((result: any) => ({
+      const mappedResults: TestResult[] = results.testResults.map((result) => ({
         bugId: result.bugId,
         name: result.name || `Bug ${result.bugId}`,
         isFixed: result.isFixed,
@@ -116,7 +130,7 @@ export function BugDebugOverlay({
     if (isVisible && currentCode) {
       runTests()
     }
-  }, [isVisible, currentCode, toolId])
+  }, [isVisible, currentCode, toolId, runTests])
 
   if (!isVisible) return null
 
@@ -348,9 +362,9 @@ export function BugDebugOverlay({
                   <div className="text-gray-400">Has Error: <span className="text-white">{error ? 'Yes' : 'No'}</span></div>
                 </div>
                 <div className="space-y-1">
-                  <div className="text-gray-400">Fixed Bug IDs: <span className="text-white">{debugInfo.fixedBugs.join(', ') || 'None'}</span></div>
+                  <div className="text-gray-400">Fixed Bug IDs: <span className="text-white">{debugInfo.fixedBugs?.join(', ') || 'None'}</span></div>
                   <div className="text-gray-400">Count Match: <span className="text-white">{debugInfo.uiBugCount === debugInfo.testBugCount ? 'Yes' : 'No'}</span></div>
-                  <div className="text-gray-400">Tests Run: <span className="text-white">{debugInfo.testResults.length}</span></div>
+                  <div className="text-gray-400">Tests Run: <span className="text-white">{debugInfo.testResults?.length || 0}</span></div>
                   <div className="text-gray-400">Status: <span className="text-white">{debugInfo.allFixed ? 'COMPLETE' : 'IN PROGRESS'}</span></div>
                 </div>
               </div>

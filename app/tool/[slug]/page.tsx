@@ -5,8 +5,8 @@ import { useParams, useRouter } from "next/navigation"
 import { Sandpack } from "@codesandbox/sandpack-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Play, RotateCcw, Terminal, Github, LogOut, Download, Settings, CheckCircle, AlertCircle, Target, Bug, Copy, Eye, EyeOff, TestTube } from 'lucide-react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Play, RotateCcw, Terminal, Github, LogOut, Download, Settings, CheckCircle, AlertCircle, Target, Bug, Copy, EyeOff, TestTube } from 'lucide-react'
 import ProfilePage from '../../../components/profile-page'
 import { loadToolsFromJson, fallbackTools, type HomepageTool } from '@/lib/utils/toolLoader'
 import { ExportDialog } from '@/components/export-dialog'
@@ -52,8 +52,7 @@ export default function ToolPage() {
   // Developer debug logger (enable via window.__BUG_DEBUG__ = true in console)
   const devLog = (...args: unknown[]) => {
     if (typeof window === 'undefined') return
-    // @ts-ignore allow ad-hoc debug flag
-    const debugFlag = (window as any).__BUG_DEBUG__
+    const debugFlag = (window as unknown as { __BUG_DEBUG__?: boolean }).__BUG_DEBUG__
     if (process.env.NODE_ENV !== 'production' || debugFlag) {
       // eslint-disable-next-line no-console
       console.debug('[BugStudio]', ...args)
@@ -190,12 +189,12 @@ export default function ToolPage() {
       toolId,
       reportedTotalBugs: testResults.totalBugs,
       uiBugCount: currentTool?.bugs.length,
-      results: testResults.testResults.map((r: any) => ({ bugId: r.bugId, isFixed: r.isFixed, confidence: r.confidence }))
+      results: testResults.testResults.map((r) => ({ bugId: r.bugId, isFixed: r.isFixed, confidence: r.confidence }))
     })
     const newBugProgress: {[key: number]: {isFixed: boolean, confidence: number}} = {}
     const newlyFixedBugs: number[] = []
 
-    testResults.testResults.forEach((result: any) => {
+    testResults.testResults.forEach((result) => {
       newBugProgress[result.bugId] = {
         isFixed: result.isFixed,
         confidence: result.confidence
@@ -223,7 +222,7 @@ export default function ToolPage() {
     const totalBugs = currentTool.bugs.length
     if (totalBugs > 0) {
       const fixedNow = Object.entries(newBugProgress)
-        .filter(([_, p]) => p.isFixed && p.confidence >= 80)
+        .filter(([, p]) => p.isFixed && p.confidence >= 80)
         .map(([bugId]) => Number(bugId))
       const fixedSet = new Set<number>([...bugsFixed, ...fixedNow])
       devLog('checkBugProgress:evaluate-complete', { toolId, totalBugs, fixedNow, previouslyFixed: bugsFixed, fixedSetSize: fixedSet.size })
@@ -270,7 +269,7 @@ export default function ToolPage() {
         toolId,
         reportedTotalBugs: testResults.totalBugs,
         uiBugCount: currentTool?.bugs.length,
-        results: testResults.testResults.map((r: any) => ({ bugId: r.bugId, isFixed: r.isFixed, confidence: r.confidence }))
+        results: testResults.testResults.map((r) => ({ bugId: r.bugId, isFixed: r.isFixed, confidence: r.confidence }))
       })
 
       for (const testResult of testResults.testResults) {
@@ -356,7 +355,7 @@ export default function ToolPage() {
     return Math.round((bugsFixed.length / currentTool.bugs.length) * 100)
   }
 
-  const copyAIPrompt = async (bug: any, bugId: number) => {
+  const copyAIPrompt = async (bug: {id: number, title: string, description: string, clue: string, bonus: string, solution?: string}, bugId: number) => {
     const prompt = `Please help me fix this bug in my React code:
 
 **Bug Title:** ${bug.title}
@@ -376,7 +375,7 @@ Please provide the corrected code with clear explanations of what was wrong and 
       setCopiedPrompt(bugId)
       addToast('AI prompt copied to clipboard!', 'success')
       setTimeout(() => setCopiedPrompt(null), 2000)
-    } catch (err) {
+    } catch {
       addToast('Failed to copy to clipboard', 'error')
     }
   }
@@ -593,7 +592,7 @@ Please provide the corrected code with clear explanations of what was wrong and 
                 />
                 
                 {/* Real-time Bug Hints */}
-                {Object.entries(bugProgress).some(([_, progress]) => !progress.isFixed) && (
+                {Object.entries(bugProgress).some(([, progress]) => !progress.isFixed) && (
                   <div className="absolute bottom-4 right-4 bg-[#2A2A2A] rounded-lg p-2 text-xs text-gray-400 max-w-xs">
                     <div className="flex items-center gap-1 mb-1">
                       <Target className="h-3 w-3" />
@@ -934,7 +933,7 @@ Please provide the corrected code with clear explanations of what was wrong and 
                         </Button>
                       </div>
                       <div className="mt-2 p-3 bg-[#2A2A2A] rounded text-xs text-gray-400 font-mono">
-                        <div className="text-gray-300 mb-2">Click "Copy AI Prompt" to get a ready-to-use prompt that includes:</div>
+                        <div className="text-gray-300 mb-2">Click &quot;Copy AI Prompt&quot; to get a ready-to-use prompt that includes:</div>
                         <ul className="list-disc list-inside space-y-1 text-xs">
                           <li>Bug title and description</li>
                           <li>Helpful clues and bonus challenges</li>

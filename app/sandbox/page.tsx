@@ -589,9 +589,6 @@ export default MyComponent;`;
     setSandboxKey(prev => prev + 1)
   }
 
-  const handleCodeChange = (newCode: string) => {
-    setCurrentCode(newCode)
-  }
 
   return (
     <div className="min-h-screen bg-[#121212] text-white">

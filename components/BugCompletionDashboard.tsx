@@ -6,15 +6,45 @@ import { Button } from '@/components/ui/button';
 import { Bug, CheckCircle, AlertCircle, Clock, Zap } from 'lucide-react';
 import { BugCompletionStatus, DetectionResult } from '@/lib/types/enhancedBugTypes';
 
+const getStatusColor = (status: string): string => {
+  switch (status) {
+    case 'completed':
+    case 'verified':
+      return 'bg-green-900/20 text-green-400 border-green-900';
+    case 'fixed':
+      return 'bg-blue-900/20 text-blue-400 border-blue-900';
+    case 'detected':
+      return 'bg-yellow-900/20 text-yellow-400 border-yellow-900';
+    case 'in-progress':
+      return 'bg-purple-900/20 text-purple-400 border-purple-900';
+    default:
+      return 'bg-red-900/20 text-red-400 border-red-900';
+  }
+};
+
+const getStatusIcon = (status: string) => {
+  switch (status) {
+    case 'completed':
+    case 'verified':
+      return <CheckCircle className="w-4 h-4" />;
+    case 'fixed':
+      return <Zap className="w-4 h-4" />;
+    case 'detected':
+      return <AlertCircle className="w-4 h-4" />;
+    case 'in-progress':
+      return <Clock className="w-4 h-4" />;
+    default:
+      return <Bug className="w-4 h-4" />;
+  }
+};
+
 interface BugCompletionDashboardProps {
-  toolId: string;
-  bugs: any[];
+  bugs: Array<{id: number, title: string, description: string, clue: string, bonus: string, solution?: string}>;
   completions: Map<number, BugCompletionStatus>;
   detectionResults?: Map<number, DetectionResult>;
 }
 
 export function BugCompletionDashboard({ 
-  toolId, 
   bugs, 
   completions, 
   detectionResults 
@@ -34,37 +64,6 @@ export function BugCompletionDashboard({
     return totalConfidence / completions.size;
   };
 
-  const getStatusColor = (status: string): string => {
-    switch (status) {
-      case 'completed':
-      case 'verified':
-        return 'bg-green-500 text-white';
-      case 'fixed':
-        return 'bg-blue-500 text-white';
-      case 'detected':
-        return 'bg-yellow-500 text-black';
-      case 'in-progress':
-        return 'bg-orange-500 text-white';
-      default:
-        return 'bg-gray-500 text-white';
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'completed':
-      case 'verified':
-        return <CheckCircle className="w-4 h-4" />;
-      case 'fixed':
-        return <Zap className="w-4 h-4" />;
-      case 'detected':
-        return <AlertCircle className="w-4 h-4" />;
-      case 'in-progress':
-        return <Clock className="w-4 h-4" />;
-      default:
-        return <Bug className="w-4 h-4" />;
-    }
-  };
 
   return (
     <Card className="bg-[#1E1E1E] border-[#2A2A2A] text-white">
@@ -165,7 +164,7 @@ function CompletionMetric({ title, value, color, icon }: CompletionMetricProps) 
 }
 
 interface BugStatusCardProps {
-  bug: any;
+  bug: {id: number, title: string, description: string, clue: string, bonus: string, solution?: string};
   completion?: BugCompletionStatus;
   detectionResult?: DetectionResult;
   showDetails: boolean;

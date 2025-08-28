@@ -1,4 +1,4 @@
-import { DetectionResult, AnalysisResult, TestResult, BugContext } from '../types/enhancedBugTypes';
+import { DetectionResult } from '../types/enhancedBugTypes';
 import { BugTestRunner } from './bugTestRunner';
 import { CodeAnalyzer } from './codeAnalyzer';
 import { PerformanceMonitor } from './performanceMonitor';
