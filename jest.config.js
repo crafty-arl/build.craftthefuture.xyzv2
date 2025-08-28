@@ -13,6 +13,9 @@ module.exports = {
   transform: {
     '^.+\\.(ts|tsx)$': 'ts-jest',
   },
+  transformIgnorePatterns: [
+    'node_modules/(?!(@codesandbox|react|@testing-library|@react-hook|intersection-observer)/)'
+  ],
   collectCoverageFrom: [
     'lib/**/*.{ts,tsx}',
     'components/**/*.{ts,tsx}',

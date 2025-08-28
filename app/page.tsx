@@ -5,9 +5,10 @@ import { useRouter } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Github, Bug, ArrowRight, Code2, Calendar, User } from 'lucide-react'
+import { Github, Bug, ArrowRight, Code2, Calendar, User, Zap, CheckCircle, Target, Trophy, Lightbulb, Clock } from 'lucide-react'
 import ProfilePage from '../components/profile-page'
 import { loadToolsFromJson, fallbackTools, type HomepageTool } from '@/lib/utils/toolLoader'
+import { OnboardingModal } from '@/components/onboarding-modal'
 
 type Tool = HomepageTool
 
@@ -18,6 +19,8 @@ export default function BuildPlatform() {
   const [showProfile, setShowProfile] = useState(false)
   const [user, setUser] = useState<{username: string, avatar: string, name: string} | null>(null)
   const [isLoggingIn, setIsLoggingIn] = useState(false)
+  const [showOnboarding, setShowOnboarding] = useState(false)
+  const [hasSeenOnboarding, setHasSeenOnboarding] = useState(false)
 
     // Load tools from JSON on component mount
   useEffect(() => {
@@ -35,6 +38,13 @@ export default function BuildPlatform() {
     }
 
     loadTools()
+
+    // Check if user has seen onboarding
+    const hasSeenOnboardingBefore = localStorage.getItem('build-onboarding-seen')
+    if (!hasSeenOnboardingBefore && !user) {
+      setTimeout(() => setShowOnboarding(true), 1000) // Show after 1 second
+    }
+    setHasSeenOnboarding(!!hasSeenOnboardingBefore)
   }, [])
 
   const handleGitHubLogin = async () => {
@@ -49,10 +59,21 @@ export default function BuildPlatform() {
     }, 1500)
   }
 
+  const handleOnboardingComplete = () => {
+    localStorage.setItem('build-onboarding-seen', 'true')
+    setHasSeenOnboarding(true)
+    setShowOnboarding(false)
+  }
+
+  const handleShowOnboarding = () => {
+    setShowOnboarding(true)
+  }
+
 
 
   const selectTool = (tool: Tool) => {
-    router.push(`/tool/${tool.id}`)
+    // Route to unified IDE with guided mode for challenges
+    router.push(`/code?mode=guided&challenge=${tool.id}`)
   }
 
   if (showProfile) {
@@ -61,7 +82,7 @@ export default function BuildPlatform() {
 
   // Main Studio View
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-background text-foreground">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-background text-foreground animate-slide-up">
       {/* Header */}
       <div className="border-b border-[#1E1E1E] px-4 sm:px-6 py-4">
         <div className="flex items-center justify-between">
@@ -77,11 +98,11 @@ export default function BuildPlatform() {
                 Test Fonts
               </a>
               <a 
-                href="/sandbox" 
+                href="/code?mode=explore" 
                 className="text-xs text-gray-400 hover:text-[#7EE787] transition-colors"
-                title="Free coding sandbox"
+                title="Code Editor - All modes available"
               >
-                Sandbox
+                Code Editor
               </a>
             </div>
             
@@ -150,24 +171,49 @@ export default function BuildPlatform() {
                 Continue Build
                 <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 ml-2" />
               </Button>
-              <div className="text-sm text-gray-400 order-first sm:order-none">
-                Welcome back, {user.name} 👋
+              <div className="flex items-center gap-4">
+                <div className="text-sm text-gray-400 order-first sm:order-none">
+                  Welcome back, {user.name} 👋
+                </div>
+                {hasSeenOnboarding && (
+                  <Button 
+                    variant="outline"
+                    size="sm"
+                    onClick={handleShowOnboarding}
+                    className="border-[#2A2A2A] text-gray-400 hover:text-white hover:border-[#7EE787] text-xs"
+                  >
+                    View Tutorial
+                  </Button>
+                )}
               </div>
             </div>
           ) : (
             <div className="space-y-3 sm:space-y-4">
-              <Button 
-                size="lg" 
-                className="bg-[#7EE787] text-black hover:bg-[#6BD975] font-medium w-full sm:w-auto"
-                onClick={handleGitHubLogin}
-                disabled={isLoggingIn}
-              >
-                <Bug className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-                {isLoggingIn ? 'Connecting...' : 'Begin Your Build'}
-                <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 ml-2" />
-              </Button>
+              <div className="flex flex-col sm:flex-row items-center gap-3">
+                <Button 
+                  size="lg" 
+                  className="bg-[#7EE787] text-black hover:bg-[#6BD975] font-medium w-full sm:w-auto"
+                  onClick={handleGitHubLogin}
+                  disabled={isLoggingIn}
+                >
+                  <Bug className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+                  {isLoggingIn ? 'Connecting...' : 'Begin Your Build'}
+                  <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 ml-2" />
+                </Button>
+                
+                {!hasSeenOnboarding && (
+                  <Button 
+                    variant="outline"
+                    size="lg"
+                    onClick={handleShowOnboarding}
+                    className="border-[#2A2A2A] text-white hover:border-[#7EE787] hover:bg-[#7EE787]/10 w-full sm:w-auto"
+                  >
+                    Take the Tour
+                  </Button>
+                )}
+              </div>
               <p className="text-sm text-gray-500">
-                Sign in to track your progress
+                {hasSeenOnboarding ? 'Sign in to track your progress' : 'New to BUILD? Take the tour to get started'}
               </p>
             </div>
           )}
@@ -235,6 +281,84 @@ export default function BuildPlatform() {
           </Card>
         </div>
 
+        {/* How It Works Section */}
+        <div className="mb-12 sm:mb-16">
+          <div className="text-center mb-8 sm:mb-12 animate-slide-up">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-4">How BUILD Works</h2>
+            <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+              Master React debugging through hands-on practice with real-world tools
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 animate-slide-up" style={{animationDelay: '0.2s'}}>
+            {/* Step 1 */}
+            <div className="text-center group hover-lift transition-smooth">
+              <div className="relative mb-4">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#7EE787]/10 rounded-full flex items-center justify-center mx-auto group-hover:bg-[#7EE787]/20 transition-colors">
+                  <Target className="h-8 w-8 sm:h-10 sm:w-10 text-[#7EE787]" />
+                </div>
+                <div className="absolute -top-2 -right-2 w-8 h-8 bg-[#7EE787] text-black rounded-full flex items-center justify-center text-sm font-bold">
+                  1
+                </div>
+              </div>
+              <h3 className="text-lg sm:text-xl font-semibold mb-2">Choose Your Tool</h3>
+              <p className="text-gray-400 text-sm sm:text-base">
+                Select from 5 carefully crafted React components, each with multiple bugs to fix
+              </p>
+            </div>
+
+            {/* Step 2 */}
+            <div className="text-center group hover-lift transition-smooth">
+              <div className="relative mb-4">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-yellow-500/10 rounded-full flex items-center justify-center mx-auto group-hover:bg-yellow-500/20 transition-colors">
+                  <Bug className="h-8 w-8 sm:h-10 sm:w-10 text-yellow-500" />
+                </div>
+                <div className="absolute -top-2 -right-2 w-8 h-8 bg-yellow-500 text-black rounded-full flex items-center justify-center text-sm font-bold">
+                  2
+                </div>
+              </div>
+              <h3 className="text-lg sm:text-xl font-semibold mb-2">Debug & Fix</h3>
+              <p className="text-gray-400 text-sm sm:text-base">
+                Use our real-time feedback system to identify and fix bugs in the code editor
+              </p>
+            </div>
+
+            {/* Step 3 */}
+            <div className="text-center group hover-lift transition-smooth">
+              <div className="relative mb-4">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-green-500/10 rounded-full flex items-center justify-center mx-auto group-hover:bg-green-500/20 transition-colors">
+                  <Trophy className="h-8 w-8 sm:h-10 sm:w-10 text-green-500" />
+                </div>
+                <div className="absolute -top-2 -right-2 w-8 h-8 bg-green-500 text-black rounded-full flex items-center justify-center text-sm font-bold">
+                  3
+                </div>
+              </div>
+              <h3 className="text-lg sm:text-xl font-semibold mb-2">Level Up</h3>
+              <p className="text-gray-400 text-sm sm:text-base">
+                Track your progress, export your solutions, and advance to more complex challenges
+              </p>
+            </div>
+          </div>
+
+          {/* Skills You'll Learn */}
+          <div className="mt-12 sm:mt-16 text-center">
+            <h3 className="text-xl sm:text-2xl font-bold mb-6">Skills You'll Master</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[
+                { icon: Code2, label: 'React Hooks', color: 'text-blue-400' },
+                { icon: Zap, label: 'State Management', color: 'text-yellow-400' },
+                { icon: CheckCircle, label: 'Event Handling', color: 'text-green-400' },
+                { icon: Lightbulb, label: 'Component Logic', color: 'text-purple-400' }
+              ].map((skill, index) => (
+                <div key={index} className="bg-[#1E1E1E] border border-[#2A2A2A] rounded-lg p-4 hover:border-[#7EE787] transition-smooth group hover-lift hover-glow">
+                  <skill.icon className={`h-6 w-6 ${skill.color} mb-2 mx-auto group-hover:scale-110 transition-transform animate-bounce-in`} style={{animationDelay: `${index * 0.1}s`}} />
+                  <p className="text-sm font-medium text-gray-300 group-hover:text-white transition-colors">{skill.label}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
         {/* Tools Grid */}
         <div className="space-y-4 sm:space-y-6">
           <div className="flex items-center justify-between">
@@ -247,42 +371,110 @@ export default function BuildPlatform() {
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {tools.map((tool) => (
-              <Card 
-                key={tool.id} 
-                className="bg-[#1E1E1E] border-[#2A2A2A] hover:border-[#7EE787] transition-colors cursor-pointer group"
-                onClick={() => selectTool(tool)}
-              >
-                <CardContent className="p-4 sm:p-6">
-                  <div className="flex items-start justify-between mb-3 sm:mb-4">
-                    <div className="p-1.5 sm:p-2 bg-[#7EE787]/10 rounded-lg">
-                      <tool.icon className="h-5 w-5 sm:h-6 sm:w-6 text-[#7EE787]" />
+            {tools.map((tool) => {
+              // Define skill tags and estimated completion time for each tool
+              const getToolMetadata = (toolId: string) => {
+                const metadata = {
+                  'poll-maker': { 
+                    skills: ['State Management', 'Event Handling', 'Forms'], 
+                    estimatedTime: '15-20 min',
+                    difficultyColor: 'bg-green-500'
+                  },
+                  'date-calculator': { 
+                    skills: ['Date APIs', 'Input Validation', 'React Hooks'], 
+                    estimatedTime: '20-25 min',
+                    difficultyColor: 'bg-blue-500'
+                  },
+                  'product-name-generator': { 
+                    skills: ['Arrays', 'Random Logic', 'State Updates'], 
+                    estimatedTime: '10-15 min',
+                    difficultyColor: 'bg-green-500'
+                  },
+                  'receipt-builder': { 
+                    skills: ['Complex State', 'Calculations', 'Dynamic Lists'], 
+                    estimatedTime: '25-30 min',
+                    difficultyColor: 'bg-orange-500'
+                  },
+                  'bio-generator': { 
+                    skills: ['Template Logic', 'String Manipulation', 'Conditional Rendering'], 
+                    estimatedTime: '15-20 min',
+                    difficultyColor: 'bg-purple-500'
+                  }
+                };
+                return metadata[toolId as keyof typeof metadata] || { 
+                  skills: ['React Basics'], 
+                  estimatedTime: '15-20 min',
+                  difficultyColor: 'bg-gray-500'
+                };
+              };
+
+              const { skills, estimatedTime, difficultyColor } = getToolMetadata(tool.id);
+
+              return (
+                <Card 
+                  key={tool.id} 
+                  className="bg-[#1E1E1E] border-[#2A2A2A] hover:border-[#7EE787] transition-all duration-300 cursor-pointer group hover:shadow-lg hover:shadow-[#7EE787]/10"
+                  onClick={() => selectTool(tool)}
+                >
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="flex items-start justify-between mb-3 sm:mb-4">
+                      <div className="p-1.5 sm:p-2 bg-[#7EE787]/10 rounded-lg group-hover:bg-[#7EE787]/20 transition-colors">
+                        <tool.icon className="h-5 w-5 sm:h-6 sm:w-6 text-[#7EE787] group-hover:scale-110 transition-transform" />
+                      </div>
+                      <div className="flex flex-col items-end gap-2">
+                        <Badge className={`${difficultyColor} text-white font-medium text-xs sm:text-sm`}>
+                          {tool.difficulty}
+                        </Badge>
+                        <div className="flex items-center gap-1 text-xs text-gray-500">
+                          <Clock className="h-3 w-3" />
+                          <span>{estimatedTime}</span>
+                        </div>
+                      </div>
                     </div>
-                    <Badge className="bg-[#7EE787] text-black font-medium text-xs sm:text-sm">
-                      {tool.difficulty}
-                    </Badge>
-                  </div>
-                  
-                  <h3 className="text-base sm:text-lg font-semibold mb-2 group-hover:text-[#7EE787] transition-colors">
-                    {tool.title}
-                  </h3>
-                  <p className="text-gray-400 text-sm mb-3 sm:mb-4 line-clamp-2">
-                    {tool.description}
-                  </p>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5 sm:gap-2">
-                      <Bug className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-500" />
-                      <span className="text-xs sm:text-sm text-gray-400">{tool.bugs.length} bugs</span>
+                    
+                    <h3 className="text-base sm:text-lg font-semibold mb-2 group-hover:text-[#7EE787] transition-colors">
+                      {tool.title}
+                    </h3>
+                    <p className="text-gray-400 text-sm mb-3 sm:mb-4 line-clamp-2">
+                      {tool.description}
+                    </p>
+                    
+                    {/* Skill Tags */}
+                    <div className="mb-4">
+                      <div className="flex flex-wrap gap-1.5">
+                        {skills.slice(0, 3).map((skill, index) => (
+                          <Badge 
+                            key={index}
+                            variant="outline" 
+                            className="text-xs border-[#2A2A2A] text-gray-300 bg-[#252525] hover:border-[#7EE787] hover:text-[#7EE787] transition-colors"
+                          >
+                            {skill}
+                          </Badge>
+                        ))}
+                      </div>
                     </div>
-                    <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4 text-gray-400 group-hover:text-[#7EE787] transition-colors" />
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <Bug className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-500" />
+                        <span className="text-xs sm:text-sm text-gray-400">{tool.bugs.length} bugs to fix</span>
+                      </div>
+                      <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4 text-gray-400 group-hover:text-[#7EE787] transition-colors" />
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </div>
       </div>
+      
+      {/* Onboarding Modal */}
+      <OnboardingModal 
+        isOpen={showOnboarding}
+        onClose={() => setShowOnboarding(false)}
+        onGetStarted={handleOnboardingComplete}
+      />
     </div>
   )
 }

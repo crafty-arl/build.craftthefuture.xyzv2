@@ -6,8 +6,10 @@ import { Sandpack } from "@codesandbox/sandpack-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Play, RotateCcw, Terminal, Download, Settings, Save, FileText, Code2, Trash2 } from 'lucide-react'
+import { Play, RotateCcw, Terminal, Download, Settings, Save, FileText, Code2, Trash2, Target } from 'lucide-react'
 import { ExportDialog } from '@/components/export-dialog'
+import { LearningBridge } from '@/components/learning-bridge'
+import { ContextualHelpSystem } from '@/components/contextual-help'
 
 interface SandboxTemplate {
   id: string
@@ -461,6 +463,11 @@ export default function SandboxPage() {
   const [sandboxKey, setSandboxKey] = useState(0)
   const [savedSandboxes, setSavedSandboxes] = useState<Array<{id: string, name: string, code: string, timestamp: string}>>([])
   const [componentName, setComponentName] = useState('Counter')
+  
+  // Enhanced sandbox features
+  const [showLearningBridge, setShowLearningBridge] = useState(false)
+  const [timeOnPage, setTimeOnPage] = useState(0)
+  const [userLevel, setUserLevel] = useState<'beginner' | 'intermediate' | 'advanced'>('beginner')
 
   // Function to extract component name from code
   const extractComponentName = (code: string): string => {
@@ -546,6 +553,16 @@ export default MyComponent;`;
     setComponentName(newComponentName);
   }, [currentCode]);
 
+  // Time tracking for contextual help
+  useEffect(() => {
+    const startTime = Date.now()
+    const interval = setInterval(() => {
+      setTimeOnPage(Date.now() - startTime)
+    }, 1000)
+    
+    return () => clearInterval(interval)
+  }, [])
+
   const saveSandbox = () => {
     const name = prompt('Enter a name for this sandbox:')
     if (name && name.trim()) {
@@ -606,16 +623,39 @@ export default MyComponent;`;
             </Button>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-                <h1 className="text-lg sm:text-2xl font-bold">Code Sandbox</h1>
-                <Badge className="bg-[#7EE787] text-black font-medium px-2 sm:px-3 py-1 text-xs sm:text-sm shrink-0">
-                  Free Play
+                <h1 className="text-lg sm:text-2xl font-bold">Practice Mode</h1>
+                <Badge className="bg-purple-500/10 text-purple-400 border border-purple-400/20 font-medium px-2 sm:px-3 py-1 text-xs sm:text-sm shrink-0">
+                  Free Exploration
                 </Badge>
               </div>
-              <p className="text-gray-400 mt-1 text-sm sm:text-base hidden md:block">Write, test, and export your React components</p>
+              <div className="mt-1 hidden md:block">
+                <p className="text-gray-400 text-sm sm:text-base">
+                  Perfect for experimenting with ideas, testing concepts, or practicing without structured guidance
+                </p>
+                <p className="text-gray-500 text-xs mt-1">
+                  💡 Ready for structured challenges? Try our Guided Challenges mode
+                </p>
+              </div>
             </div>
           </div>
           
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <Button
+              variant="outline"
+              onClick={() => setShowLearningBridge(!showLearningBridge)}
+              className="border-blue-400/20 text-blue-400 hover:bg-blue-500/10 px-3 sm:px-4 py-2 text-sm"
+              size="sm"
+            >
+              <Target className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Challenges</span>
+            </Button>
+            
+            <ContextualHelpSystem
+              environment="sandbox"
+              userLevel={userLevel}
+              timeOnPage={timeOnPage}
+            />
+            
             <Button
               variant="outline"
               onClick={() => setShowSettings(!showSettings)}
@@ -630,65 +670,32 @@ export default MyComponent;`;
       </div>
 
       {/* Main Content */}
-      <div className="flex flex-col lg:flex-row h-[calc(100vh-140px)]">
-        {/* Code Editor */}
-        <div className="w-full lg:w-1/2 border-b lg:border-b-0 lg:border-r border-[#1E1E1E] h-1/2 lg:h-full">
-          <Sandpack
-            key={`editor-${sandboxKey}`}
-            template="react"
-            files={{
-              "/App.js": {
-                code: generateReactCode(currentCode),
-                active: true
-              }
-            }}
-            theme="dark"
-            options={{
-              showNavigator: false,
-              showTabs: false,
-              showLineNumbers: true,
-              showInlineErrors: true,
-              wrapContent: true,
-              editorHeight: "100%"
-            }}
-            customSetup={{
-              dependencies: {
-                "react": "^18.0.0",
-                "react-dom": "^18.0.0"
-              }
-            }}
-          />
-        </div>
-
-        {/* Live Preview */}
-        <div className="w-full lg:w-1/2 h-1/2 lg:h-full">
-          <Sandpack
-            key={`preview-${sandboxKey}`}
-            template="react"
-            files={{
-              "/App.js": {
-                code: generateReactCode(currentCode),
-                active: true
-              }
-            }}
-            theme="dark"
-            options={{
-              showNavigator: false,
-              showTabs: false,
-              showLineNumbers: false,
-              showInlineErrors: false,
-              wrapContent: true,
-              editorHeight: "100%",
-              layout: "preview"
-            }}
-            customSetup={{
-              dependencies: {
-                "react": "^18.0.0",
-                "react-dom": "^18.0.0"
-              }
-            }}
-          />
-        </div>
+      <div className="h-[calc(100vh-140px)]">
+        <Sandpack
+          key={`sandbox-${sandboxKey}`}
+          template="react"
+          files={{
+            "/App.js": {
+              code: generateReactCode(currentCode),
+              active: true
+            }
+          }}
+          theme="dark"
+          options={{
+            showNavigator: false,
+            showTabs: false,
+            showLineNumbers: true,
+            showInlineErrors: true,
+            wrapContent: true,
+            layout: "split"
+          }}
+          customSetup={{
+            dependencies: {
+              "react": "^18.0.0",
+              "react-dom": "^18.0.0"
+            }
+          }}
+        />
       </div>
 
       {/* Bottom Dock */}
@@ -848,6 +855,63 @@ export default MyComponent;`;
             </div>
           </DialogContent>
         </Dialog>
+      )}
+
+      {/* Learning Bridge Panel */}
+      {showLearningBridge && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center p-4">
+          <div className="bg-[#1E1E1E] border border-[#2A2A2A] rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-4 border-b border-[#2A2A2A]">
+              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <Target className="h-5 w-5" />
+                Ready for Structured Learning?
+              </h2>
+              <Button
+                variant="ghost"
+                onClick={() => setShowLearningBridge(false)}
+                className="text-gray-400 hover:text-white"
+                size="sm"
+              >
+                ×
+              </Button>
+            </div>
+            
+            <div className="p-4">
+              <LearningBridge
+                currentEnvironment="sandbox"
+                currentCode={currentCode}
+                onTransition={(targetEnvironment, data) => {
+                  if (targetEnvironment === 'learning') {
+                    // Navigate to guided challenges
+                    router.push(`/`)
+                  }
+                  setShowLearningBridge(false)
+                }}
+                // Mock suggested challenges - in real app would come from API
+                suggestedChallenges={[
+                  {
+                    id: 'poll-maker',
+                    title: 'Poll Maker',
+                    description: 'Learn state management by fixing a voting component',
+                    difficulty: 'beginner' as const,
+                    skills: ['useState', 'event handling', 'state mutations'],
+                    estimatedTime: 15,
+                    bugCount: 1
+                  },
+                  {
+                    id: 'date-calculator',
+                    title: 'Date Calculator',
+                    description: 'Master date manipulation and form handling',
+                    difficulty: 'intermediate' as const,
+                    skills: ['forms', 'validation', 'date handling'],
+                    estimatedTime: 20,
+                    bugCount: 2
+                  }
+                ]}
+              />
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

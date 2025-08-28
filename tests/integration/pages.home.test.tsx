@@ -1,10 +1,10 @@
-import { describe, it, expect, beforeEach, vi } from '@jest/globals'
+import { describe, it, expect, beforeEach, jest } from '@jest/globals'
 import React from 'react'
 import { render, screen, fireEvent } from '@testing-library/react'
 import BuildPlatform from '../../app/page'
 
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: vi.fn() })
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({ push: jest.fn() })
 }))
 
 describe('Home Page', () => {

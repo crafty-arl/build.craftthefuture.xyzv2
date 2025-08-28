@@ -22,7 +22,7 @@ export interface HomepageTool {
 export async function loadToolsFromJson(): Promise<HomepageTool[]> {
   try {
     const tools: HomepageTool[] = []
-    console.log('Starting to load tools from JSON files...')
+    console.log('🔍 ToolLoader Debug - Starting to load tools from JSON files...')
 
     // Helper function to get icon component safely
     const getIconComponent = (iconName: string, fallback: React.ComponentType<{ className?: string }>) => {
@@ -65,11 +65,16 @@ export async function loadToolsFromJson(): Promise<HomepageTool[]> {
         }
 
         tools.push(dateCalculatorHomepageTool)
-        console.log('Successfully loaded date calculator tool:', dateCalculatorTool.id)
+        console.log('🔍 ToolLoader Debug - Successfully loaded date calculator tool:', {
+          id: dateCalculatorTool.id,
+          title: dateCalculatorTool.title,
+          hasBrokenCode: !!dateCalculatorTool.brokenCode,
+          brokenCodeLength: dateCalculatorTool.brokenCode?.length || 0
+        })
       }
-    } catch (error) {
-      console.warn('Failed to load date calculator tool:', error)
-    }
+          } catch (error) {
+        console.warn('🔍 ToolLoader Debug - Failed to load date calculator tool:', error)
+      }
 
     // Load the product name generator tool from its separate file
     try {
@@ -207,10 +212,18 @@ export async function loadToolsFromJson(): Promise<HomepageTool[]> {
       console.warn('Failed to load bio generator tool:', error)
     }
 
-    console.log('Final loaded tools:', tools.map(t => ({ id: t.id, title: t.title })))
+    console.log('🔍 ToolLoader Debug - Final loaded tools:', {
+      count: tools.length,
+      tools: tools.map(t => ({ 
+        id: t.id, 
+        title: t.title,
+        hasBrokenCode: !!t.brokenCode,
+        brokenCodeLength: t.brokenCode?.length || 0
+      }))
+    })
     return tools
   } catch (error) {
-    console.error('Error loading tools from JSON:', error)
+    console.error('🔍 ToolLoader Debug - Error loading tools from JSON:', error)
     // Return empty array if loading fails
     return []
   }

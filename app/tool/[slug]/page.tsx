@@ -6,13 +6,18 @@ import { Sandpack } from "@codesandbox/sandpack-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Play, RotateCcw, Terminal, Github, LogOut, Download, Settings, CheckCircle, AlertCircle, Target, Bug, Copy, EyeOff, TestTube } from 'lucide-react'
+import { Play, RotateCcw, Terminal, Github, LogOut, Download, Settings, CheckCircle, AlertCircle, Target, Bug, Copy, EyeOff, TestTube, Beaker } from 'lucide-react'
 import ProfilePage from '../../../components/profile-page'
 import { loadToolsFromJson, fallbackTools, type HomepageTool } from '@/lib/utils/toolLoader'
 import { ExportDialog } from '@/components/export-dialog'
 import { ReactCodeGenerator } from '@/lib/utils/reactCodeGenerator'
 import { FunctionalBugDetection } from '@/lib/utils/functionalBugDetection'
 import { BugDebugOverlay } from '@/components/BugDebugOverlay'
+import { EnhancedCodeEditor } from '@/components/enhanced-code-editor'
+import { SuccessCelebration } from '@/components/success-celebration'
+import { ProgressiveDisclosure, CompactHeader } from '@/components/progressive-disclosure'
+import { LearningBridge } from '@/components/learning-bridge'
+import { ContextualHelpSystem } from '@/components/contextual-help'
 
 type Tool = HomepageTool
 
@@ -39,6 +44,15 @@ export default function ToolPage() {
   const [showSettings, setShowSettings] = useState(false)
   const [autoSave, setAutoSave] = useState(true)
   const [toasts, setToasts] = useState<Array<{id: string, message: string, type: 'success' | 'error' | 'info'}>>([])
+  
+  // Learning experience enhancements
+  const [userLevel, setUserLevel] = useState<'beginner' | 'intermediate' | 'advanced'>('beginner')
+  const [feedbackMode, setFeedbackMode] = useState<'immediate' | 'on-run' | 'on-request'>('on-run')
+  const [timeOnPage, setTimeOnPage] = useState(0)
+  const [errorCount, setErrorCount] = useState(0)
+  const [isStuck, setIsStuck] = useState(false)
+  const [showLearningBridge, setShowLearningBridge] = useState(false)
+  
   const [lastTestResults, setLastTestResults] = useState<Array<{
     bugId: number
     name?: string
@@ -66,6 +80,9 @@ export default function ToolPage() {
   const [showBugDetails, setShowBugDetails] = useState(false)
   const [copiedPrompt, setCopiedPrompt] = useState<number | null>(null)
   const [showDebugOverlay, setShowDebugOverlay] = useState(false)
+  const [showCelebration, setShowCelebration] = useState(false)
+  const [celebrationType, setCelebrationType] = useState<'bug-fix' | 'all-complete' | 'milestone'>('bug-fix')
+  const [celebrationMessage, setCelebrationMessage] = useState('')
 
   // Load tools from JSON on component mount
   useEffect(() => {
@@ -124,15 +141,32 @@ export default function ToolPage() {
     }
   }, [editorCode, currentTool, autoSave])
 
-  // Real-time bug detection as user types
+  // Intelligent bug detection based on feedback mode
   useEffect(() => {
-    if (currentTool && editorCode) {
+    if (currentTool && editorCode && feedbackMode === 'immediate') {
       const timeoutId = setTimeout(() => {
         checkBugProgress(editorCode).catch(console.error)
-      }, 500) // Debounce for performance
+      }, 1500) // Longer delay to encourage experimentation
       return () => clearTimeout(timeoutId)
     }
-  }, [editorCode, currentTool])
+  }, [editorCode, currentTool, feedbackMode])
+
+  // Time tracking for contextual help
+  useEffect(() => {
+    const startTime = Date.now()
+    const interval = setInterval(() => {
+      setTimeOnPage(Date.now() - startTime)
+    }, 1000)
+    
+    return () => clearInterval(interval)
+  }, [])
+
+  // Stuck detection (no progress for 5+ minutes)
+  useEffect(() => {
+    const lastActivity = lastRunTime || Date.now()
+    const timeSinceActivity = Date.now() - lastActivity
+    setIsStuck(timeSinceActivity > 300000 && bugsFixed.length < getTotalBugsCount())
+  }, [lastRunTime, bugsFixed, currentTool])
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -247,6 +281,7 @@ export default function ToolPage() {
   const runCode = async () => {
     setIsRunningCode(true)
     setRunProgress(0)
+    setErrorCount(prev => prev + 1) // Track error attempts for contextual help
     devLog('runCode:start', { toolId: currentTool?.id, codeLength: (editorCode || currentCode).length })
     
     const progressInterval = setInterval(() => {
@@ -261,48 +296,65 @@ export default function ToolPage() {
         return
       }
 
-      const toolId = currentTool.id
-      const newBugsFixed: number[] = []
-      const testResults = await FunctionalBugDetection.getDetailedTestResults(toolId, codeToCheck)
-      setLastTestResults(testResults.testResults)
-      devLog('runCode:results', {
-        toolId,
-        reportedTotalBugs: testResults.totalBugs,
-        uiBugCount: currentTool?.bugs.length,
-        results: testResults.testResults.map((r) => ({ bugId: r.bugId, isFixed: r.isFixed, confidence: r.confidence }))
-      })
+      // Only run bug detection on 'on-run' and 'on-request' modes
+      if (feedbackMode === 'on-run' || feedbackMode === 'on-request') {
+        const toolId = currentTool.id
+        const newBugsFixed: number[] = []
+        const testResults = await FunctionalBugDetection.getDetailedTestResults(toolId, codeToCheck)
+        setLastTestResults(testResults.testResults)
+        devLog('runCode:results', {
+          toolId,
+          reportedTotalBugs: testResults.totalBugs,
+          uiBugCount: currentTool?.bugs.length,
+          results: testResults.testResults.map((r) => ({ bugId: r.bugId, isFixed: r.isFixed, confidence: r.confidence }))
+        })
 
-      for (const testResult of testResults.testResults) {
-        if (
-          testResult.isFixed &&
-          testResult.confidence >= 80 &&
-          !bugsFixed.includes(testResult.bugId)
-        ) {
-          newBugsFixed.push(testResult.bugId)
+        for (const testResult of testResults.testResults) {
+          if (
+            testResult.isFixed &&
+            testResult.confidence >= 80 &&
+            !bugsFixed.includes(testResult.bugId)
+          ) {
+            newBugsFixed.push(testResult.bugId)
+          }
         }
-      }
 
-      if (newBugsFixed.length > 0) {
-        devLog('runCode:newlyFixed', { toolId, newBugsFixed, previouslyFixed: bugsFixed })
-        setBugsFixed(prev => [...prev, ...newBugsFixed])
-        setRecentlyFixed(newBugsFixed)
-        addToast(`🎉 Fixed ${newBugsFixed.length} new bug${newBugsFixed.length > 1 ? 's' : ''}!`, 'success')
+        if (newBugsFixed.length > 0) {
+          devLog('runCode:newlyFixed', { toolId, newBugsFixed, previouslyFixed: bugsFixed })
+          setBugsFixed(prev => [...prev, ...newBugsFixed])
+          setRecentlyFixed(newBugsFixed)
+          
+          // Show success celebration
+          setCelebrationType('bug-fix')
+          setCelebrationMessage(`Fixed ${newBugsFixed.length} bug${newBugsFixed.length > 1 ? 's' : ''}!`)
+          setShowCelebration(true)
+          
+          addToast(`🎉 Fixed ${newBugsFixed.length} new bug${newBugsFixed.length > 1 ? 's' : ''}!`, 'success')
+          
+          // Clear recently fixed after animation
+          setTimeout(() => setRecentlyFixed([]), 3000)
+        }
         
-        // Clear recently fixed after animation
-        setTimeout(() => setRecentlyFixed([]), 3000)
-      }
-      
-      // Always surface explicit success when ALL bugs are fixed, even if none were newly fixed this run
-      if (currentTool) {
-        const totalBugs = currentTool.bugs.length
-        const fixedCount = new Set([...
-          bugsFixed,
-          ...newBugsFixed
-        ]).size
-        devLog('runCode:evaluate-complete', { toolId, totalBugs, fixedCount })
-        if (totalBugs > 0 && fixedCount === totalBugs) {
-          addToast('🎉 All bugs fixed! Challenge complete.', 'success')
+        // Always surface explicit success when ALL bugs are fixed, even if none were newly fixed this run
+        if (currentTool) {
+          const totalBugs = currentTool.bugs.length
+          const fixedCount = new Set([...
+            bugsFixed,
+            ...newBugsFixed
+          ]).size
+          devLog('runCode:evaluate-complete', { toolId, totalBugs, fixedCount })
+          if (totalBugs > 0 && fixedCount === totalBugs) {
+            // Show completion celebration
+            setCelebrationType('all-complete')
+            setCelebrationMessage('All bugs fixed! Challenge complete!')
+            setShowCelebration(true)
+            
+            addToast('🎉 All bugs fixed! Challenge complete.', 'success')
+          }
         }
+      } else {
+        // For 'immediate' mode or no feedback mode, just refresh the preview
+        setSandpackKey(prev => prev + 1)
       }
       
       setLastRunTime(Date.now())
@@ -410,14 +462,14 @@ Please provide the corrected code with clear explanations of what was wrong and 
   }
 
   return (
-    <div className="min-h-screen bg-[#121212] text-white">
+    <div className="min-h-screen bg-[#121212] text-white animate-slide-up">
       {/* Toast Notifications */}
-      <div className="fixed top-4 right-4 z-50 space-y-2">
+      <div className="fixed top-4 right-4 z-40 space-y-2">
         {toasts.map(toast => (
           <div
             key={toast.id}
-            className={`px-4 py-3 rounded-lg shadow-lg transition-all duration-300 transform translate-x-0 ${
-              toast.type === 'success' ? 'bg-[#7EE787] text-black' :
+            className={`px-4 py-3 rounded-lg shadow-lg transition-all duration-300 transform translate-x-0 animate-slide-right ${
+              toast.type === 'success' ? 'bg-[#7EE787] text-black animate-glow' :
               toast.type === 'error' ? 'bg-red-500 text-white' :
               'bg-blue-500 text-white'
             }`}
@@ -427,10 +479,17 @@ Please provide the corrected code with clear explanations of what was wrong and 
         ))}
       </div>
 
-      {/* Enhanced Header with Bug Progress */}
-      <div className="border-b border-[#1E1E1E] px-4 py-3">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 min-w-0 flex-1">
+      {/* Simplified Compact Header */}
+      <CompactHeader
+        title={currentTool.title}
+        userLevel={userLevel}
+        progress={{
+          completed: bugsFixed.length,
+          total: getTotalBugsCount(),
+          percentage: getCompletionPercentage()
+        }}
+        essentialActions={
+          <>
             <Button
               variant="ghost"
               onClick={() => router.push('/')}
@@ -439,42 +498,27 @@ Please provide the corrected code with clear explanations of what was wrong and 
             >
               ← Back
             </Button>
-            
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-lg font-bold truncate">{currentTool.title}</h1>
-                <Badge className="bg-[#7EE787] text-black text-xs">
-                  {currentTool.difficulty}
-                </Badge>
-                <Badge className={`text-black text-xs ${
-                  bugsFixed.length === getTotalBugsCount() ? 'bg-green-500' : 'bg-yellow-500'
-                }`}>
-                  {bugsFixed.length}/{getTotalBugsCount()} Fixed
-                </Badge>
-                <Badge className="bg-purple-500 text-white text-xs">
-                  {getCompletionPercentage()}% Complete
-                </Badge>
-              </div>
-              
-              {/* Inline Bug Progress Bar */}
-              {showBugProgress && (
-                <div className="mt-2 flex items-center gap-2">
-                  <div className="flex-1 bg-[#2A2A2A] rounded-full h-2 overflow-hidden">
-                    <div 
-                      className="bg-[#7EE787] h-2 rounded-full transition-all duration-500 ease-out"
-                      style={{ width: `${getCompletionPercentage()}%` }}
-                    ></div>
-                  </div>
-                  <span className="text-xs text-gray-400 whitespace-nowrap">
-                    Progress: {getCompletionPercentage()}%
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            {/* Layout Controls */}
+            <Badge className="bg-blue-500/10 text-blue-400 border border-blue-400/20 text-xs">
+              Guided Challenge
+            </Badge>
+            <Badge className="bg-[#7EE787] text-black text-xs">
+              {currentTool.difficulty}
+            </Badge>
+            <ContextualHelpSystem
+              environment="learning"
+              userLevel={userLevel}
+              currentTool={currentTool.id}
+              bugsFixed={bugsFixed.length}
+              totalBugs={getTotalBugsCount()}
+              timeOnPage={timeOnPage}
+              errorCount={errorCount}
+              isStuck={isStuck}
+            />
+          </>
+        }
+        advancedTools={
+          <>
+            {/* Layout Controls - Only show for intermediate+ */}
             <div className="flex items-center gap-1 bg-[#1E1E1E] rounded-lg p-1">
               <Button
                 variant="ghost"
@@ -501,8 +545,6 @@ Please provide the corrected code with clear explanations of what was wrong and 
                 Preview
               </Button>
             </div>
-
-            {/* Settings */}
             <Button
               variant="ghost"
               size="sm"
@@ -511,7 +553,6 @@ Please provide the corrected code with clear explanations of what was wrong and 
             >
               <Settings className="h-4 w-4" />
             </Button>
-
             {user && (
               <div 
                 className="flex items-center gap-2 px-2 py-1 bg-[#1E1E1E] rounded-full cursor-pointer hover:bg-[#2A2A2A]"
@@ -525,92 +566,26 @@ Please provide the corrected code with clear explanations of what was wrong and 
                 <span className="text-xs text-gray-300 hidden sm:inline">{user.username}</span>
               </div>
             )}
-          </div>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {/* Dynamic Layout */}
       <div className="h-[calc(100vh-140px)] flex">
-        {/* Code Editor with Inline Bug Indicators */}
+        {/* Enhanced Code Editor */}
         {(layoutMode === 'split' || layoutMode === 'editor') && (
           <div className={`${layoutMode === 'split' ? 'w-1/2' : 'w-full'} border-r border-[#2A2A2A]`}>
-            <div className="h-full flex flex-col">
-              <div className="bg-[#1E1E1E] px-4 py-2 border-b border-[#2A2A2A] flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-300">Your Code</h3>
-                    <p className="text-xs text-gray-500">Ctrl+Enter to run, Ctrl+R to reset</p>
-                  </div>
-                  
-                  {/* Inline Bug Status Indicators */}
-                  {currentTool && (
-                    <div className="flex items-center gap-1">
-                      {currentTool.bugs.map((bug, index) => (
-                        <div
-                          key={`bug-indicator-${bug.id}-${index}`}
-                          className={`w-3 h-3 rounded-full border-2 transition-all duration-300 ${
-                            bugsFixed.includes(bug.id) 
-                              ? 'bg-green-500 border-green-400' 
-                              : bugProgress[bug.id]?.isFixed 
-                                ? 'bg-yellow-500 border-yellow-400' 
-                                : 'bg-red-500 border-red-400'
-                          } ${
-                            recentlyFixed.includes(bug.id) ? 'animate-pulse scale-125' : ''
-                          }`}
-                          title={`Bug ${bug.id}: ${bug.title} - ${
-                            bugsFixed.includes(bug.id) ? 'Fixed' : 
-                            bugProgress[bug.id]?.isFixed ? 'Detected' : 'Not Fixed'
-                          }`}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-500">
-                    {(editorCode || currentCode).length} chars
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={resetCode}
-                    className="text-gray-400 hover:text-white"
-                  >
-                    <RotateCcw className="h-3 w-3" />
-                  </Button>
-                </div>
-              </div>
-              
-              {/* Enhanced Text Area with Better Styling */}
-              <div className="flex-1 relative">
-                <textarea
-                  value={editorCode || currentCode}
-                  onChange={(e) => setEditorCode(e.target.value)}
-                  className="w-full h-full bg-[#1E1E1E] text-white p-4 font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#7EE787] focus:ring-opacity-50"
-                  placeholder="Enter your code here..."
-                  spellCheck={false}
-                />
-                
-                {/* Real-time Bug Hints */}
-                {Object.entries(bugProgress).some(([, progress]) => !progress.isFixed) && (
-                  <div className="absolute bottom-4 right-4 bg-[#2A2A2A] rounded-lg p-2 text-xs text-gray-400 max-w-xs">
-                    <div className="flex items-center gap-1 mb-1">
-                      <Target className="h-3 w-3" />
-                      <span>Active Bugs:</span>
-                    </div>
-                    {currentTool?.bugs
-                      .filter(bug => !bugsFixed.includes(bug.id))
-                      .slice(0, 2)
-                      .map((bug, index) => (
-                        <div key={`bug-hint-${bug.id}-${index}`} className="text-xs text-gray-500">
-                          • {bug.title}
-                        </div>
-                      ))
-                    }
-                  </div>
-                )}
-              </div>
-            </div>
+            <EnhancedCodeEditor
+              value={editorCode || currentCode}
+              onChange={setEditorCode}
+              onReset={resetCode}
+              bugs={currentTool?.bugs || []}
+              bugsFixed={bugsFixed}
+              bugProgress={bugProgress}
+              recentlyFixed={recentlyFixed}
+              placeholder="Enter your React code here..."
+              className="h-full"
+            />
           </div>
         )}
 
@@ -811,6 +786,16 @@ Please provide the corrected code with clear explanations of what was wrong and 
                 </Button>
               }
             />
+
+            <Button
+              variant="outline"
+              onClick={() => setShowLearningBridge(!showLearningBridge)}
+              className="border-purple-400/20 text-purple-400 hover:bg-purple-500/10 text-sm"
+              size="sm"
+            >
+              <Beaker className="h-4 w-4 mr-1" />
+              Practice Mode
+            </Button>
             
             {!user ? (
               <Button
@@ -1019,6 +1004,14 @@ Please provide the corrected code with clear explanations of what was wrong and 
         </DialogContent>
       </Dialog>
 
+      {/* Success Celebration */}
+      <SuccessCelebration
+        isVisible={showCelebration}
+        message={celebrationMessage}
+        type={celebrationType}
+        onComplete={() => setShowCelebration(false)}
+      />
+
       {/* Debug Overlay */}
       {showDebugOverlay && currentTool && (
         <BugDebugOverlay
@@ -1029,6 +1022,59 @@ Please provide the corrected code with clear explanations of what was wrong and 
           onClose={() => setShowDebugOverlay(false)}
         />
       )}
+
+      {/* Learning Bridge Panel */}
+      {showLearningBridge && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center p-4">
+          <div className="bg-[#1E1E1E] border border-[#2A2A2A] rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-4 border-b border-[#2A2A2A]">
+              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <Beaker className="h-5 w-5" />
+                Switch Learning Environment
+              </h2>
+              <Button
+                variant="ghost"
+                onClick={() => setShowLearningBridge(false)}
+                className="text-gray-400 hover:text-white"
+                size="sm"
+              >
+                <EyeOff className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <div className="p-4">
+              <LearningBridge
+                currentEnvironment="learning"
+                currentCode={editorCode || currentCode}
+                onTransition={(targetEnvironment, data) => {
+                  if (targetEnvironment === 'sandbox') {
+                    // Navigate to sandbox with current code
+                    router.push(`/sandbox?code=${encodeURIComponent(data?.code || '')}`)
+                  }
+                  setShowLearningBridge(false)
+                }}
+                suggestedChallenges={tools.filter(t => t.id !== currentTool?.id).map(t => ({
+                  id: t.id,
+                  title: t.title,
+                  description: t.description || '',
+                  difficulty: t.difficulty as 'beginner' | 'intermediate' | 'advanced',
+                  skills: t.tags || [],
+                  estimatedTime: t.estimatedTime || 15,
+                  bugCount: t.bugs.length
+                }))}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success Celebration */}
+      <SuccessCelebration
+        isVisible={showCelebration}
+        type={celebrationType}
+        message={celebrationMessage}
+        onComplete={() => setShowCelebration(false)}
+      />
     </div>
   )
 } 

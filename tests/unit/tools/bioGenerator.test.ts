@@ -11,7 +11,7 @@ describe('Bio Generator Tool', () => {
           const n = names[Math.floor(Math.random()*names.length)]
           const j = jobs[Math.floor(Math.random()*jobs.length)]
           const h = hobbies[Math.floor(Math.random()*hobbies.length)]
-          return `${n} is a ${j} who loves ${h}.`
+          return n + ' is a ' + j + ' who loves ' + h + '.'
         }
       `
       const result = testClass.compileTest(code)
