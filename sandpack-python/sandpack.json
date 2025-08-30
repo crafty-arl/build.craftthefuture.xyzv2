@@ -1,0 +1,20 @@
+{
+  "template": "python",
+  "files": {
+    "main.py": {
+      "code": "# Main application entry point\nfrom src.app import create_app\n\nif __name__ == \"__main__\":\n    app = create_app()\n    app.run()"
+    },
+    "requirements.txt": {
+      "code": "# Core dependencies\nfastapi==0.104.1\nuvicorn==0.24.0\npydantic==2.5.0\n\n# Data processing\npandas==2.1.3\nnumpy==1.25.2\n\n# Testing\npytest==7.4.3\npytest-cov==4.1.0\n\n# Code quality\nblack==23.11.0\nflake8==6.1.0\nisort==5.12.0\n\n# Documentation\nsphinx==7.2.6"
+    },
+    "src/__init__.py": {
+      "code": "# Python package initialization"
+    },
+    "src/app.py": {
+      "code": "from fastapi import FastAPI\nfrom fastapi.middleware.cors import CORSMiddleware\n\n\ndef create_app():\n    app = FastAPI(\n        title=\"Python Sandpack Project\",\n        description=\"A beautiful Python project optimized for Sandpack IDE\",\n        version=\"1.0.0\"\n    )\n    \n    # Add CORS middleware\n    app.add_middleware(\n        CORSMiddleware,\n        allow_origins=[\"*\"],\n        allow_credentials=True,\n        allow_methods=[\"*\"],\n        allow_headers=[\"*\"],\n    )\n    \n    @app.get(\"/\")\n    async def root():\n        return {\"message\": \"Welcome to Python Sandpack Project!\"}\n    \n    @app.get(\"/health\")\n    async def health_check():\n        return {\"status\": \"healthy\", \"environment\": \"sandpack\"}\n    \n    return app"
+    }
+  },
+  "environment": {
+    "python": "3.11"
+  }
+}
